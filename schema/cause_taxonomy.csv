@@ -1,0 +1,17 @@
+cause_code,parent_code,label,definition
+market_problem,,Market/problem failure,The target problem is not urgent frequent or valuable enough
+pmf,market_problem,Product-market fit failure,Customers do not adopt retain pay or expand reliably
+pricing,market_problem,Pricing failure,Price or packaging cannot capture sufficient value
+unit_economics,,Unsustainable unit economics,Contribution economics do not support scalable growth
+funding,,Capital/runway failure,The company cannot finance operations or reach the next milestone
+distribution,,Distribution failure,The company lacks a repeatable affordable route to customers
+competition,,Competition/displacement,Competitors platforms or incumbents remove the advantage
+team,,Team/capability failure,Missing skills leadership turnover or founder conflict materially impair execution
+governance,,Governance failure,Board ownership incentives or controls fail
+operations,,Operations/execution failure,Delivery quality reliability or process cannot scale
+timing,,Timing/macro failure,Market readiness economic conditions or timing prevent adoption
+regulation,,Regulatory/legal failure,Law approvals compliance or litigation block viability
+technology,,Technology/product failure,Core technology cannot meet required performance cost or reliability
+focus,,Premature scaling/focus failure,Scope complexity or hiring grows before repeatable evidence
+fraud,,Fraud/misconduct,Deception misconduct or control failure causes collapse
+unknown,,Unknown/unclear cause,Available evidence does not establish a cause
