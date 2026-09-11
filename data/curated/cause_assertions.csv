@@ -1,0 +1,2 @@
+assertion_id,company_id,cause_code,source_id,assertion_type,confidence,evidence_quote,analyst_note
+fixture-assertion,fixture-co,unknown,fixture-source,analyst_inference,low,,Fixture row only; not a research case.
