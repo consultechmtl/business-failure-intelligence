@@ -37,6 +37,29 @@ Phase 0: schema and source registry. The project intentionally starts with a sma
 
 Build a reviewed seed set of 25-50 cases, including Quebec/Canadian cases, with at least one source quotation per coded cause. Do not claim completeness.
 
+## Validate, load, query, and test
+
+Run these commands from the repository root:
+
+```sh
+# Validate curated CSV records and their references.
+python3 scripts/validate_data.py
+
+# Build the SQLite database from the validated corpus.
+python3 scripts/load_sqlite.py --db data/business_failure.sqlite
+
+# Query loaded data with the Python standard library.
+python3 -c "import sqlite3; connection = sqlite3.connect('data/business_failure.sqlite'); print(connection.execute('SELECT confidence, COUNT(*) FROM cause_assertions GROUP BY confidence ORDER BY confidence').fetchall())"
+
+# Load a temporary SQLite database and print descriptive corpus summaries.
+python3 scripts/analyze_corpus.py
+
+# Run the standard-library test suite.
+python3 -m unittest discover -s tests -v
+```
+
+The analysis is descriptive of the reviewed seed corpus, not a population failure-rate estimate. See [docs/analysis.md](docs/analysis.md) for limits on interpretation and the distinction between source evidence and analyst inference.
+
 ## License
 
 Code and schema: MIT. Source content remains subject to its original license and terms. See `docs/data-governance.md`.
