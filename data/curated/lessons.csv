@@ -1,2 +1,11 @@
 lesson_id,company_id,lesson,applicability,action_for_founder,confidence
-fixture-lesson,fixture-co,Fixture only; not a research case.,,,low
+wesabe-lesson,wesabe,Make product choices that remove high-friction customer work before competitors do.,Consumer-finance products requiring account data.,Test a complete automated workflow before defending a privacy or architecture constraint.,high
+rethinkdb-lesson,rethinkdb,Demand is insufficient when users will not pay enough to fund distribution and product work.,Open-source developer tools.,Test willingness to pay and acquisition economics alongside usage growth.,high
+tract-lesson,tract,Validate willingness to pay and commercial path before scaling a technical team.,B2B software in conservative sectors.,Secure committed paid customers before expanding headcount or product scope.,high
+advisable-lesson,advisable,"Treat founder-market understanding and profitability as hypotheses, not assumed strengths.",Marketplaces and new product versions.,Interview and sell to the target users before repeated relaunches.,medium
+spreadable-lesson,spreadable,A product can grow and still be a poor strategic fit when the market and sales motion are too small.,Multi-product companies.,Compare addressable market and required sales motion with the firm’s capabilities before continuing investment.,high
+juked-lesson,juked,A viable product path can disappear when sector funding conditions change.,Venture-backed media and community products.,Set fundraising contingencies and assess sector financing before relying on the next round.,medium
+siempo-lesson,siempo,"New categories may face timing, hardware, and capital constraints simultaneously.",Mission-led consumer technology.,De-risk manufacturing and financing before committing to a new-device strategy.,medium
+sentar-lesson,sentar,Founders need an agreed decision process before conflicts make intuition decisive.,Early-stage founding teams.,Document decision rules and revisit them regularly.,high
+helmet-lesson,helmet,"Founder financial and family constraints are operating constraints, not background details.",Bootstrapped teams.,Assess founder availability and personal runway before committing to a venture schedule.,high
+skillstackers-lesson,skillstackers,Revenue traction does not resolve structural business-model or defensibility questions.,Service-enabled automation products.,Test repeatable margins and a defensibility path before scaling.,medium

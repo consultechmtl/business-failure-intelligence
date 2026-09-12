@@ -1,2 +1,11 @@
 company_id,canonical_name,legal_name,country_code,region_code,city,founded_year,industry,business_model,description
-fixture-co,Fixture Co,,CA,QC,,,,,
+wesabe,Wesabe,,US,CA,San Francisco,2005,financial technology,consumer web,Personal-finance management service.
+rethinkdb,RethinkDB,,US,,,2009,database software,open-source developer tools,Open-source database company.
+tract,Tract,,GB,,London,2023,property technology,B2B software,Planning-permission software startup.
+advisable,Advisable,,GB,,,2018,freelance marketplace,marketplace,Freelance-marketplace startup.
+spreadable,Spreadable,,US,,,,marketing software,B2B software,Referral-program software product of Grasshopper Group.
+juked,Juked,,US,CA,Los Angeles,2019,esports media,consumer app,Esports schedule and social community.
+siempo,"Siempo, Inc.",,US,,Chicago,2016,consumer technology,mobile software,Humane smartphone-interface startup.
+sentar,Sentar,,,,,,social impact technology,startup,Early-stage startup described by its founders.
+helmet,Helmet,,,,,2025,mental health,startup,Mental-health startup.
+skillstackers,SkillStackers,,US,PA,Philadelphia,2017,business services,marketplace,Task and automation startup using a Philippines-based remote workforce.

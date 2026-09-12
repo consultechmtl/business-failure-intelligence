@@ -1,2 +1,11 @@
 outcome_id,company_id,outcome_type,outcome_date,jurisdiction,status,notes
-fixture-outcome,fixture-co,shutdown,,,reported,
+wesabe-shutdown,wesabe,shutdown,2010-07-31,United States,reported,Founder says the site was turned off at the end of July 2010.
+rethinkdb-shutdown,rethinkdb,shutdown,2016-10-05,United States,reported,Founder postmortem follows the shutdown announcement.
+tract-shutdown,tract,shutdown,2025-03-01,United Kingdom,reported,Founders decided to wrap up operations and return capital in March 2025.
+advisable-shutdown,advisable,shutdown,,United Kingdom,reported,Founder announced the shutdown after 4.5 years.
+spreadable-shutdown,spreadable,shutdown,,United States,reported,Company postmortem says it stopped investing in the product and planned a full shutdown.
+juked-shutdown,juked,shutdown,2022-11-01,United States,reported,CEO announced the company would begin closing down in coming weeks.
+siempo-shutdown,siempo,shutdown,2020-12-21,United States,reported,CEO says Siempo was dissolved and removed from the Play Store on the Winter Solstice 2020.
+sentar-shutdown,sentar,shutdown,,,reported,Founders wrote that they had decided to shut down after 18 months.
+helmet-shutdown,helmet,shutdown,,,reported,Founder says the co-founders stopped operations after one co-founder stepped away.
+skillstackers-shutdown,skillstackers,shutdown,2018-05-01,United States,reported,Founder wrote two months after the decision to shut down.

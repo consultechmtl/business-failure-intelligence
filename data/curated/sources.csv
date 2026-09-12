@@ -1,2 +1,11 @@
 source_id,source_url,title,publisher,source_type,published_date,accessed_date,evidence_quality,notes
-fixture-source,https://example.com/fixture,Fixture source,,,2026-09-11,unknown,
+wesabe-hedlund-2010,https://medium.com/10-thousand-ways-to-fail/why-wesabe-lost-to-mint-c5a439c3f513,Why Wesabe Lost to Mint,Marc Hedlund,founder_postmortem,2010-10-04,2026-09-11,A,Postmortem by Wesabe co-founder and final CEO.
+rethinkdb-akhmechet-2017,https://gist.github.com/jthodge/f0c96f86cfaa885983a98690f2536722,RethinkDB: why we failed,Slava Akhmechet,founder_postmortem,2017-01-16,2026-09-11,A,Postmortem attributed to RethinkDB co-founder Slava Akhmechet.
+tract-postmortem-2025,https://buildwithtract.com/,Tract Postmortem,Tract,company_statement,2025-04-01,2026-09-11,A,Postmortem signed by co-founders Jamie Rumbelow and Henry Dashwood.
+advisable-postmortem-2022,https://schlupfloch.ghost.io/explaining-advisables-failure,I’m shutting my startup down after 4.5 years - here’s where I went wrong & why,Advisable founder,founder_postmortem,2022-09-01,2026-09-11,A,Founder-authored account; author cautions against single-cause explanations.
+spreadable-postmortem,https://grasshopper.com/blog/spreadable,The Spreadable Story,Grasshopper Group,company_statement,,2026-09-11,A,Company postmortem.
+juked-goldhaber-2022,https://medium.com/@FishStix/the-juked-story-is-coming-to-a-close-a71f20ce3b8c,The Juked Story Is Coming To A Close,Ben Goldhaber,founder_postmortem,2022-11-01,2026-09-11,A,CEO and co-founder account.
+siempo-dunn-2021,https://aandrewdunn.medium.com/postmortem-for-siempo-a-humane-tech-startup-%EF%B8%8F-62ef61832df0,Postmortem for Siempo: A Humane Tech Startup,Andrew Dunn,founder_postmortem,2021-01-01,2026-09-11,A,Postmortem by Siempo CEO.
+sentar-lasse,https://medium.com/@lasse.k/mistake-3out-of-3-not-following-a-process-every-goddamn-day-3ad06d993485,Mistake 3 out of 3: Not following a process — every goddamn day,Sentar founders,founder_postmortem,,2026-09-11,A,Founder team’s postmortem.
+helmet-khan-2025,https://medium.com/@dankhan/when-its-over-before-it-begins-2c21f7eadeea,When It’s Over Before It Begins,Dan Khan,founder_postmortem,2025-01-01,2026-09-11,A,Co-founder’s shutdown reflection.
+skillstackers-choco,https://medium.com/@DOitChoco/why-we-decided-to-shutdown-skillstackers-college-startup-reflections-e7c50cf0c6f1,Why We Decided To Shutdown SkillStackers & College Startup Reflections,SkillStackers founder,founder_postmortem,2018-07-01,2026-09-11,A,Founder-authored shutdown reflection.
