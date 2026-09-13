@@ -43,3 +43,20 @@ ORDER BY warning_count DESC, signal_code, confidence;
 
 Use these records to navigate back to the cited evidence, not to infer when a
 signal first appeared or that it caused the final outcome.
+
+## Intelligence API interpretation
+
+The read-only API exposes stored records and deterministic descriptive counts;
+it does not calculate failure probabilities, rank causes by causal importance,
+or supply counterfactual explanations. `/causes` groups **assertions**, so one
+company can contribute multiple entries and an assertion may be an analyst
+inference rather than a primary statement. `/geographies` groups only the
+geography fields present in reviewed records; `unknown` means coverage is
+incomplete, not that a company had no geography. The Quebec comparison contrasts
+reviewed Quebec cases with non-Canadian or unlocated cases and is not a matched
+international benchmark. Inspect each case's `sources`, `assertions`, confidence,
+and assertion type before reusing a count or lesson.
+
+The API intentionally has no authentication or write endpoints. It rebuilds its
+default SQLite file from validated curated CSVs for reproducibility, but callers
+using `--db` are responsible for the provenance and freshness of that database.

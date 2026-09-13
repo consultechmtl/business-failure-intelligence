@@ -72,6 +72,20 @@ python3 -c "import sqlite3; connection = sqlite3.connect('data/business_failure.
 # Load a temporary SQLite database and print descriptive corpus summaries.
 python3 scripts/analyze_corpus.py
 
+# Run the read-only JSON API. Without --db it deterministically rebuilds
+# data/business_failure.sqlite from the validated curated CSVs.
+python3 app/server.py --port 8000
+
+# Or use an existing database instead of rebuilding one.
+python3 app/server.py --db data/business_failure.sqlite --port 8000
+
+# Query the API from another terminal.
+curl http://127.0.0.1:8000/health
+curl http://127.0.0.1:8000/summary
+curl http://127.0.0.1:8000/companies/wesabe
+curl http://127.0.0.1:8000/causes
+curl http://127.0.0.1:8000/geographies
+
 # Run the standard-library test suite.
 python3 -m unittest discover -s tests -v
 ```
