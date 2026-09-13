@@ -123,3 +123,62 @@ CREATE INDEX IF NOT EXISTS idx_outcomes_company ON outcomes(company_id);
 CREATE INDEX IF NOT EXISTS idx_causes_company ON cause_assertions(company_id);
 CREATE INDEX IF NOT EXISTS idx_causes_code ON cause_assertions(cause_code);
 CREATE INDEX IF NOT EXISTS idx_sources_type ON sources(source_type);
+
+-- Aggregate official statistics are deliberately separate from narrative companies.
+CREATE TABLE IF NOT EXISTS datasets (
+  dataset_id TEXT PRIMARY KEY,
+  table_number TEXT NOT NULL UNIQUE,
+  title TEXT NOT NULL,
+  publisher TEXT NOT NULL,
+  source_url TEXT NOT NULL,
+  retrieval_date TEXT NOT NULL,
+  license_notes TEXT NOT NULL,
+  definition_notes TEXT NOT NULL,
+  extraction_criteria TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS sample_frames (
+  sample_frame_id TEXT PRIMARY KEY,
+  dataset_id TEXT NOT NULL REFERENCES datasets(dataset_id),
+  label TEXT NOT NULL,
+  definition_notes TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS observation_units (
+  observation_unit_id TEXT PRIMARY KEY,
+  dataset_id TEXT NOT NULL REFERENCES datasets(dataset_id),
+  label TEXT NOT NULL,
+  unit_of_measure TEXT NOT NULL,
+  definition_notes TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS outcome_definitions (
+  outcome_definition_id TEXT PRIMARY KEY,
+  dataset_id TEXT NOT NULL REFERENCES datasets(dataset_id),
+  label TEXT NOT NULL,
+  definition_text TEXT NOT NULL,
+  UNIQUE(dataset_id, label)
+);
+
+CREATE TABLE IF NOT EXISTS aggregate_observations (
+  aggregate_observation_id TEXT PRIMARY KEY,
+  dataset_id TEXT NOT NULL REFERENCES datasets(dataset_id),
+  sample_frame_id TEXT NOT NULL REFERENCES sample_frames(sample_frame_id),
+  observation_unit_id TEXT NOT NULL REFERENCES observation_units(observation_unit_id),
+  outcome_definition_id TEXT NOT NULL REFERENCES outcome_definitions(outcome_definition_id),
+  reference_period TEXT NOT NULL,
+  geo TEXT NOT NULL,
+  naics TEXT NOT NULL,
+  employment_size TEXT NOT NULL,
+  business_dynamics TEXT NOT NULL,
+  uom TEXT NOT NULL,
+  value REAL NOT NULL,
+  status TEXT,
+  table_number TEXT NOT NULL,
+  source_url TEXT NOT NULL,
+  retrieval_date TEXT NOT NULL,
+  UNIQUE(dataset_id, reference_period, geo, naics, employment_size, business_dynamics, uom, status)
+);
+
+CREATE INDEX IF NOT EXISTS idx_aggregate_observations_comparison
+  ON aggregate_observations(dataset_id, reference_period, geo, employment_size, business_dynamics);

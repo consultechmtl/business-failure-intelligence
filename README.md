@@ -8,90 +8,69 @@ An evidence-linked, open research database for learning from business and startu
 - Preserve primary evidence, quotations, source dates, and confidence.
 - Combine qualitative post-mortems with official business-dynamics and bankruptcy data.
 - Support Quebec/Canada coverage alongside international cases.
-- Create a foundation for analysis and, later, a public insight application.
-
-## Current status
-
-Phase 0: schema and source registry. The project intentionally starts with a small, auditable data model before bulk ingestion.
 
 ## Data principles
 
 1. A cause is multi-label, not a single definitive field.
-2. Every cause must link to evidence or be marked as inference.
+2. Every narrative cause links to evidence or is marked as inference.
 3. A post-mortem is not a representative population sample.
 4. Shutdown, bankruptcy, acquisition, and distress are distinct outcomes.
 5. Raw source data is preserved separately from normalized analytical tables.
-6. Personal, confidential, and paywalled material is not copied into this repository.
+6. Official aggregate observations are never related to narrative companies.
 
 ## Repository layout
 
-- `docs/` research plan, taxonomy, and source methodology
-- `data/raw/` downloaded source snapshots (gitignored by default)
-- `data/curated/` reviewed, shareable records
-- `schema/` database schema and controlled vocabularies
-- `scripts/` ingestion and validation tools
-- `tests/` data-quality tests
-- `app/` reserved for a later explorer/API
+- `data/raw/`: downloaded source snapshots (gitignored)
+- `data/curated/`: reviewed narrative records and compact official-statistics metadata/extracts
+- `schema/`: SQLite schema and controlled vocabularies
+- `scripts/`: validation, loading, normalization, and analysis tools
+- `tests/`: standard-library `unittest` quality checks
 
-## First milestone
+## Aggregate Statistics Canada layer
 
-Build a reviewed seed set of 25-50 cases, including Quebec/Canadian cases, with at least one source quotation per coded cause. Do not claim completeness.
+The additive aggregate layer contains `datasets`, `sample_frames`,
+`observation_units`, `outcome_definitions`, and `aggregate_observations`.
+It intentionally has no `company_id`: Statistics Canada aggregate data and
+narrative company cases are different evidence types.
 
-## Additive normalization (v1)
+Table 33-10-0722-01 source:
+`https://www150.statcan.gc.ca/n1/tbl/csv/33100722-eng.zip`
 
-The original human-readable `companies` fields (`industry`, `business_model`,
-`country_code`, `region_code`, and `city`) remain available for backward
-compatibility. v1 adds nullable `industry_code`, `business_model_code`, and
-`geography_code` references plus four curated tables:
+Optional table 33-10-0270-01 source:
+`https://www150.statcan.gc.ca/n1/tbl/csv/33100270-eng.zip`
 
-- `industries.csv` and `business_models.csv`: bilingual controlled vocabularies.
-- `geographies.csv`: countries, Canadian regions, and only municipalities already evidenced by a company record.
-- `entity_aliases.csv`: canonical, legal, brand, or former legal names with a language code; accents are retained.
+The normalizer filters to GEO `Canada` and `Quebec`, preserving reference
+period, GEO, NAICS, employment size, business dynamics, UOM, VALUE, STATUS,
+table number, source URL, and retrieval date. It retains all available NAICS
+and employment-size categories and only `Openings`/`Closures` with a VALUE.
 
-Codes are populated only where the reviewed company record supports the value.
-Blank codes mean the corpus does not yet support a normalized classification or
-geography; they are not inferred from a name or source.
+“Closures” is Statistics Canada's published business-dynamics label. It is
+**not** an assertion of permanent enterprise death, insolvency, bankruptcy, or
+a cause of failure.
 
-## Validate, load, query, and test
+## Validate, load, normalize, analyze, and test
 
-Run these commands from the repository root:
+Run from the repository root:
 
 ```sh
-# Validate curated CSV records and their references.
 python3 scripts/validate_data.py
-
-# Build the SQLite database from the validated corpus.
 python3 scripts/load_sqlite.py --db data/business_failure.sqlite
-
-# Query loaded data with the Python standard library.
-python3 -c "import sqlite3; connection = sqlite3.connect('data/business_failure.sqlite'); print(connection.execute('SELECT confidence, COUNT(*) FROM cause_assertions GROUP BY confidence ORDER BY confidence').fetchall())"
-
-# Inspect evidence-linked warning signs in chronological order.
-python3 -c "import sqlite3; connection = sqlite3.connect('data/business_failure.sqlite'); print(connection.execute('SELECT company_id, signal_code, observed_date, observed_text FROM warning_signs ORDER BY observed_date IS NULL, observed_date, company_id').fetchall())"
-
-# Load a temporary SQLite database and print descriptive corpus summaries.
 python3 scripts/analyze_corpus.py
+python3 scripts/analyze_aggregate.py
 
-# Run the read-only JSON API. Without --db it deterministically rebuilds
-# data/business_failure.sqlite from the validated curated CSVs.
-python3 app/server.py --port 8000
+# A complete ZIP is required; raw archives remain gitignored.
+python3 scripts/normalize_statcan.py data/raw/33100722-eng.zip \
+  --table 33100722 --retrieval-date YYYY-MM-DD
 
-# Or use an existing database instead of rebuilding one.
-python3 app/server.py --db data/business_failure.sqlite --port 8000
-
-# Query the API from another terminal.
-curl http://127.0.0.1:8000/health
-curl http://127.0.0.1:8000/summary
-curl http://127.0.0.1:8000/companies/wesabe
-curl http://127.0.0.1:8000/causes
-curl http://127.0.0.1:8000/geographies
-
-# Run the standard-library test suite.
 python3 -m unittest discover -s tests -v
 ```
 
-The analysis is descriptive of the reviewed seed corpus, not a population failure-rate estimate. See [docs/analysis.md](docs/analysis.md) for limits on interpretation and the distinction between source evidence and analyst inference.
+The aggregate analysis reports available Canada-vs-Quebec opening/closure
+observations by employment size. An empty normalized extract produces a clear
+empty-state message rather than fabricated values.
 
 ## License
 
-Code and schema: MIT. Source content remains subject to its original license and terms. See `docs/data-governance.md`.
+Code and schema: MIT. Source content remains subject to its original licence
+and terms. Statistics Canada source reuse is governed by the Statistics Canada
+Open Government Licence - Canada; see the source data and `datasets.csv`.

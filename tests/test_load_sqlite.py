@@ -22,7 +22,7 @@ class LoadSqliteTests(unittest.TestCase):
             database_path = Path(directory) / "corpus.sqlite"
             result = self.run_loader(database_path)
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("Loaded 232 rows", result.stdout)
+            self.assertIn("Loaded 237 rows", result.stdout)
 
             with sqlite3.connect(database_path) as connection:
                 self.assertEqual(connection.execute("SELECT COUNT(*) FROM industries").fetchone()[0], 17)

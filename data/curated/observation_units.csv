@@ -1,0 +1,2 @@
+observation_unit_id,dataset_id,label,unit_of_measure,definition_notes
+statcan-33100722-unit,statcan-33100722,"Monthly business-dynamics aggregate","Number","Each record is an aggregate count at the published reference period, geography, NAICS, employment-size, and business-dynamics dimensions."

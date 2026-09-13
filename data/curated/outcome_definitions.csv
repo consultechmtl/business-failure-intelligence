@@ -1,0 +1,3 @@
+outcome_definition_id,dataset_id,label,definition_text
+statcan-33100722-openings,statcan-33100722,Openings,"Statistics Canada table label: Openings. Interpret under the table's published definitions and methodology."
+statcan-33100722-closures,statcan-33100722,Closures,"Statistics Canada table label: Closures. A closure in this aggregate series is not asserted to be a permanent enterprise death, insolvency, bankruptcy, or a cause of failure. Interpret under the table's published definitions and methodology."

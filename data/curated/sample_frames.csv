@@ -1,0 +1,2 @@
+sample_frame_id,dataset_id,label,definition_notes
+statcan-33100722-frame,statcan-33100722,"Statistics Canada business-dynamics population","Coverage and methodology are defined by Statistics Canada table 33-10-0722-01; this project does not recast it as a sample of narrative companies."

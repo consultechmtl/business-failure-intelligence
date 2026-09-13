@@ -7,10 +7,17 @@ import sqlite3
 import sys
 from pathlib import Path
 
-from validate_data import TABLES, validate
+from validate_data import AGGREGATE_OBSERVATIONS, AGGREGATE_TABLES, TABLES, validate
 
 
 LOAD_ORDER = ("industries", "business_models", "geographies", "companies", "entity_aliases", "outcomes", "sources", "cause_assertions", "lessons")
+AGGREGATE_LOAD_ORDER = ("datasets", "sample_frames", "observation_units", "outcome_definitions", "aggregate_observations")
+
+
+def table_spec(table):
+    if table == "aggregate_observations":
+        return AGGREGATE_OBSERVATIONS
+    return AGGREGATE_TABLES[table]
 
 
 def read_rows(path):
@@ -36,6 +43,7 @@ def load(database_path, data_dir, taxonomy_path, schema_path):
     if database_path.exists():
         database_path.unlink()
     rows = {table: read_rows(data_dir / filename) for table, (filename, _) in TABLES.items()}
+    aggregate_rows = {table: read_rows(data_dir / table_spec(table)[0]) for table in AGGREGATE_LOAD_ORDER}
     warning_path = data_dir / "warning_signs.csv"
     warnings = read_rows(warning_path) if warning_path.exists() else []
     with sqlite3.connect(database_path) as connection:
@@ -47,6 +55,9 @@ def load(database_path, data_dir, taxonomy_path, schema_path):
             _, columns = TABLES[table]
             counts[table] = insert_rows(connection, table, columns, rows[table])
         counts["warning_signs"] = insert_rows(connection, "warning_signs", ["warning_id", "company_id", "signal_code", "observed_text", "observed_date", "source_id", "confidence"], warnings)
+        for table in AGGREGATE_LOAD_ORDER:
+            _, columns = table_spec(table)
+            counts[table] = insert_rows(connection, table, columns, aggregate_rows[table])
     return counts
 
 

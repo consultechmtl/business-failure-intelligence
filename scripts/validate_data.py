@@ -19,6 +19,13 @@ TABLES = {
     "lessons": ("lessons.csv", ["lesson_id", "company_id", "lesson", "applicability", "action_for_founder", "confidence"]),
 }
 WARNING_SIGNS = ("warning_signs.csv", ["warning_id", "company_id", "signal_code", "observed_text", "observed_date", "source_id", "confidence"])
+AGGREGATE_TABLES = {
+    "datasets": ("datasets.csv", ["dataset_id", "table_number", "title", "publisher", "source_url", "retrieval_date", "license_notes", "definition_notes", "extraction_criteria"]),
+    "sample_frames": ("sample_frames.csv", ["sample_frame_id", "dataset_id", "label", "definition_notes"]),
+    "observation_units": ("observation_units.csv", ["observation_unit_id", "dataset_id", "label", "unit_of_measure", "definition_notes"]),
+    "outcome_definitions": ("outcome_definitions.csv", ["outcome_definition_id", "dataset_id", "label", "definition_text"]),
+}
+AGGREGATE_OBSERVATIONS = ("aggregate_observations.csv", ["aggregate_observation_id", "dataset_id", "sample_frame_id", "observation_unit_id", "outcome_definition_id", "reference_period", "geo", "naics", "employment_size", "business_dynamics", "uom", "value", "status", "table_number", "source_url", "retrieval_date"])
 OUTCOME_TYPES = {"shutdown", "bankruptcy", "insolvency", "distress", "acquisition", "asset_sale", "pivot", "dormant", "unknown"}
 CONFIDENCES = {"high", "medium", "low"}
 ASSERTION_TYPES = {"explicit_founder_statement", "court_or_regulatory_finding", "contemporaneous_reporting", "editorial_classification", "analyst_inference"}
@@ -62,7 +69,19 @@ def validate(data_dir, taxonomy_path):
     warning_filename, warning_columns = WARNING_SIGNS
     warning_path = data_dir / warning_filename
     rows["warning_signs"] = read_table(data_dir, warning_filename, warning_columns, errors) if warning_path.exists() else []
+    aggregate_enabled = (data_dir / "datasets.csv").exists()
+    for table, (filename, columns) in AGGREGATE_TABLES.items():
+        rows[table] = read_table(data_dir, filename, columns, errors) if aggregate_enabled else []
+    aggregate_filename, aggregate_columns = AGGREGATE_OBSERVATIONS
+    rows["aggregate_observations"] = read_table(data_dir, aggregate_filename, aggregate_columns, errors) if aggregate_enabled else []
+    if aggregate_enabled and not (data_dir / aggregate_filename).exists():
+        errors.append(f"{aggregate_filename}: file is required when datasets.csv is present")
     ids = {
+        table: unique_ids(rows[table], filename, columns[0], errors)
+        for table, (filename, columns) in AGGREGATE_TABLES.items()
+    }
+    ids["aggregate_observations"] = unique_ids(rows["aggregate_observations"], aggregate_filename, "aggregate_observation_id", errors)
+    ids.update({
         "companies": unique_ids(rows["companies"], "companies.csv", "company_id", errors),
         "industries": unique_ids(rows["industries"], "industries.csv", "industry_code", errors),
         "business_models": unique_ids(rows["business_models"], "business_models.csv", "business_model_code", errors),
@@ -73,7 +92,24 @@ def validate(data_dir, taxonomy_path):
         "cause_assertions": unique_ids(rows["cause_assertions"], "cause_assertions.csv", "assertion_id", errors),
         "lessons": unique_ids(rows["lessons"], "lessons.csv", "lesson_id", errors),
         "warning_signs": unique_ids(rows["warning_signs"], "warning_signs.csv", "warning_id", errors),
-    }
+    })
+    for line_number, row in enumerate(rows["sample_frames"], start=2):
+        if row["dataset_id"].strip() not in ids["datasets"]:
+            errors.append(f"sample_frames.csv: row {line_number}: unknown dataset_id: {row['dataset_id']}")
+    for table in ("observation_units", "outcome_definitions"):
+        for line_number, row in enumerate(rows[table], start=2):
+            if row["dataset_id"].strip() not in ids["datasets"]:
+                errors.append(f"{table}.csv: row {line_number}: unknown dataset_id: {row['dataset_id']}")
+    for line_number, row in enumerate(rows["aggregate_observations"], start=2):
+        for column, table in (("dataset_id", "datasets"), ("sample_frame_id", "sample_frames"), ("observation_unit_id", "observation_units"), ("outcome_definition_id", "outcome_definitions")):
+            if row[column].strip() not in ids[table]:
+                errors.append(f"aggregate_observations.csv: row {line_number}: unknown {column}: {row[column]}")
+        if row["business_dynamics"].strip() not in {"Openings", "Closures"}:
+            errors.append(f"aggregate_observations.csv: row {line_number}: invalid business_dynamics: {row['business_dynamics']}")
+        try:
+            float(row["value"])
+        except ValueError:
+            errors.append(f"aggregate_observations.csv: row {line_number}: value must be numeric")
     for line_number, row in enumerate(rows["geographies"], start=2):
         parent = row["parent_geography_code"].strip()
         if parent and parent not in ids["geographies"]:
