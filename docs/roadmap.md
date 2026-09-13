@@ -12,7 +12,7 @@
 
 - [ ] Add 25 international cases from founder post-mortems
 - [ ] Add 10 Canadian cases
-- [ ] Add 10 Quebec cases where evidence is sufficient
+- [ ] Add 10 Quebec cases where evidence is sufficient (7 outcome-confirmed cases currently curated)
 - [ ] Add one source quote for each coded cause
 - [ ] Review entity deduplication and outcome definitions
 

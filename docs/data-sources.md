@@ -39,6 +39,12 @@ The first Canadian expansion should prioritize:
 
 Quebec records require careful entity matching across French and English names, numbered companies, subsidiaries, and brand names. Coverage and access will be documented before ingestion; no claim of completeness will be made.
 
+### Reviewed Quebec expansion (September 2026)
+
+The curated corpus includes outcome-confirmed records for Taiga Motors, Lion Electric, UCG Canada Holdings Inc. (doing business as Frank And Oak), Gestion Juste Pour Rire Inc. (Just for Laughs), Le Château, and Beyond The Rack. Their legal-process outcomes are linked to monitor, trustee, court, or company materials in `data/curated/sources.csv`.
+
+These filings establish proceedings and transactions, not automatically the businesses’ root causes. Consequently, the expansion codes one narrowly supported Taiga terminal funding assertion from contemporaneous reporting; the other five cases have no cause assertions. Their lessons explicitly retain this evidence boundary. This is a coverage increment, not a representative sample of Quebec failures or insolvencies.
+
 ## Evidence grades
 
 - **A:** primary founder/company statement, court/regulatory finding, or official record directly supporting the claim

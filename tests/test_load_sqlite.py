@@ -22,7 +22,7 @@ class LoadSqliteTests(unittest.TestCase):
             database_path = Path(directory) / "corpus.sqlite"
             result = self.run_loader(database_path)
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("Loaded 122 rows", result.stdout)
+            self.assertIn("Loaded 148 rows", result.stdout)
 
             with sqlite3.connect(database_path) as connection:
                 warning_count = connection.execute("SELECT COUNT(*) FROM warning_signs").fetchone()[0]
@@ -45,7 +45,7 @@ class LoadSqliteTests(unittest.TestCase):
                     JOIN sources AS source ON source.source_id = assertion.source_id
                     """
                 ).fetchone()[0]
-                self.assertEqual(assertion_count, 36)
+                self.assertEqual(assertion_count, 37)
                 self.assertEqual(joined_count, assertion_count)
                 self.assertEqual(connection.execute("PRAGMA foreign_key_check").fetchall(), [])
 
