@@ -60,3 +60,32 @@ and assertion type before reusing a count or lesson.
 The API intentionally has no authentication or write endpoints. It rebuilds its
 default SQLite file from validated curated CSVs for reproducibility, but callers
 using `--db` are responsible for the provenance and freshness of that database.
+
+## Aggregate intelligence API
+
+The `/aggregate/*` routes are read-only views of `aggregate_observations`, not
+views of the narrative corpus. They attach dataset/table provenance (including
+publisher, source URL, retrieval date, definitions, and extraction criteria),
+reference-period coverage, UOM, status flags, and the same interpretation
+disclaimer on every response.
+
+```sh
+curl http://127.0.0.1:8000/aggregate/summary
+curl 'http://127.0.0.1:8000/aggregate/trends?geo=Quebec&dynamics=Closures'
+curl 'http://127.0.0.1:8000/aggregate/by-size?geo=Quebec'
+curl 'http://127.0.0.1:8000/aggregate/by-industry?geo=Quebec&employment_size=1%20to%204%20employees'
+```
+
+`geo`, `dynamics`, and `employment_size` are validated against values stored in
+the loaded aggregate data. An invalid value returns `404`; unsupported,
+duplicate, blank, or out-of-range query parameters return `400`. Results are
+ordered deterministically and optional `limit` is bounded to 1–500.
+
+### Safe language
+
+Describe these as **Statistics Canada business-dynamics observations** or
+**published openings/closures**. Do not relabel a closure as a business death,
+permanent closure, failure, insolvency, bankruptcy, or cause. A Statistics Canada
+closure is not necessarily any of those things, and an aggregate count cannot
+identify why a company failed. Do not merge these counts with the reviewed
+narrative cases or use them to estimate causal prevalence.

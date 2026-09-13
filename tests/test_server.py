@@ -56,6 +56,56 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(status, 404)
         self.assertEqual(json.loads(body), {"error": "company not found"})
 
+    def test_aggregate_summary_is_deterministic_and_includes_provenance(self):
+        first = self.request("/aggregate/summary")
+        second = self.request("/aggregate/summary")
+        self.assertEqual(first, second)
+        self.assertEqual(first[0], 200)
+        payload = json.loads(first[1])
+        self.assertEqual(payload["observation_count"], 50862)
+        self.assertEqual(payload["reference_periods"]["first"], "2015-01")
+        self.assertIn("not necessarily permanent deaths", payload["interpretation_disclaimer"])
+        self.assertEqual(payload["datasets"][0]["table_number"], "33-10-0270-01")
+
+    def test_aggregate_trends_compares_canada_and_quebec_and_filters(self):
+        status, body = self.request("/aggregate/trends?dynamics=Closures&limit=500")
+        self.assertEqual(status, 200)
+        rows = json.loads(body)["rows"]
+        self.assertEqual(rows[0]["reference_period"], "2015-01")
+        self.assertEqual({row["geo"] for row in rows}, {"Canada", "Quebec"})
+        status, body = self.request("/aggregate/trends?geo=Quebec&dynamics=Closures")
+        self.assertEqual(status, 200)
+        rows = json.loads(body)["rows"]
+        self.assertTrue(rows)
+        self.assertEqual({row["geo"] for row in rows}, {"Quebec"})
+        self.assertEqual({row["business_dynamics"] for row in rows}, {"Closures"})
+
+    def test_aggregate_size_and_industry_filters(self):
+        status, body = self.request("/aggregate/by-size?geo=Quebec")
+        self.assertEqual(status, 200)
+        size_rows = json.loads(body)["rows"]
+        self.assertTrue(size_rows)
+        self.assertEqual({row["geo"] for row in size_rows}, {"Quebec"})
+        status, body = self.request("/aggregate/by-industry?geo=Quebec&employment_size=1%20to%204%20employees")
+        self.assertEqual(status, 200)
+        industry_rows = json.loads(body)["rows"]
+        self.assertTrue(industry_rows)
+        self.assertEqual({row["geo"] for row in industry_rows}, {"Quebec"})
+        self.assertEqual({row["employment_size"] for row in industry_rows}, {"1 to 4 employees"})
+
+    def test_aggregate_rejects_invalid_or_unbounded_parameters(self):
+        for path, expected in (
+            ("/aggregate/trends?geo=Ontario", 404),
+            ("/aggregate/trends?dynamics=Deaths", 404),
+            ("/aggregate/trends?geo=Quebec&geo=Canada", 400),
+            ("/aggregate/trends?limit=0", 400),
+            ("/aggregate/trends?limit=501", 400),
+            ("/aggregate/by-industry?employment_size=unknown", 404),
+            ("/aggregate/by-size?unexpected=value", 400),
+        ):
+            status, _ = self.request(path)
+            self.assertEqual(status, expected, path)
+
     def test_read_endpoints_and_unknown_route(self):
         for path in ("/health", "/companies", "/causes", "/geographies"):
             status, body = self.request(path)

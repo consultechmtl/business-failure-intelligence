@@ -61,6 +61,15 @@ class IntelligenceTests(unittest.TestCase):
         self.assertEqual(comparison["quebec"]["companies"], 7)
         self.assertEqual(comparison["international"]["companies"], 10)
 
+    def test_aggregate_summary_reports_counts_provenance_and_safe_interpretation(self):
+        summary = intelligence.aggregate_summary(self.db_path)
+        self.assertEqual(summary["observation_count"], 50862)
+        self.assertEqual(summary["geographies"], [{"geo": "Canada", "observation_count": 29318}, {"geo": "Quebec", "observation_count": 21544}])
+        self.assertEqual(summary["reference_periods"], {"first": "2015-01", "last": "2026-05", "count": 137})
+        self.assertEqual([dataset["table_number"] for dataset in summary["datasets"]], ["33-10-0270-01", "33-10-0722-01"])
+        self.assertEqual(summary["uom"], ["Number"])
+        self.assertIn("not necessarily permanent deaths", summary["interpretation_disclaimer"])
+
     def test_json_serialization_is_deterministic(self):
         payload = intelligence.to_json(intelligence.corpus_summary(self.db_path))
         self.assertEqual(payload, intelligence.to_json(intelligence.corpus_summary(self.db_path)))

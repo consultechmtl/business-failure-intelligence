@@ -73,6 +73,35 @@ The aggregate analysis reports available Canada-vs-Quebec opening/closure
 observations by employment size. An empty normalized extract produces a clear
 empty-state message rather than fabricated values.
 
+## Aggregate API
+
+Start the read-only server with an explicitly loaded database:
+
+```sh
+python3 app/server.py --db data/business_failure.sqlite --port 8000
+```
+
+```sh
+curl http://127.0.0.1:8000/aggregate/summary
+curl 'http://127.0.0.1:8000/aggregate/trends?geo=Quebec&dynamics=Closures'
+curl 'http://127.0.0.1:8000/aggregate/by-size?geo=Quebec'
+curl 'http://127.0.0.1:8000/aggregate/by-industry?geo=Quebec&employment_size=1%20to%204%20employees'
+```
+
+All aggregate responses include source dataset/table provenance, source URL and
+retrieval date, available reference-period coverage, UOM, status flags, and the
+Statistics Canada interpretation disclaimer. Query parameters are allow-listed;
+unknown `geo`, `dynamics`, or `employment_size` values return `404`, while
+malformed, duplicate, or out-of-range query parameters return `400`. `limit` is
+optional and bounded to 1–500 (default 500).
+
+Use safe language: call values **Statistics Canada business-dynamics
+observations** or **published closures/openings**, not business deaths, failures,
+insolvencies, bankruptcies, or causal findings. In particular, a Statistics
+Canada closure is not necessarily a permanent enterprise death, an insolvency,
+or evidence of why a business failed. Aggregate observations remain separate
+from narrative company cases.
+
 ## License
 
 Code and schema: MIT. Source content remains subject to its original licence

@@ -104,5 +104,101 @@ def quebec_vs_international(database_path):
     return {"quebec": {"companies": counts.get("quebec", 0)}, "international": {"companies": counts.get("international", 0)}}
 
 
+AGGREGATE_DISCLAIMER = (
+    "Statistics Canada closures are business-dynamics observations, not necessarily "
+    "permanent deaths, insolvencies, bankruptcies, or causes of business failure."
+)
+
+
+def _aggregate_metadata(connection, where="", parameters=()):
+    clause = f" WHERE {where}" if where else ""
+    period = connection.execute(
+        f"SELECT MIN(reference_period), MAX(reference_period), COUNT(DISTINCT reference_period) "
+        f"FROM aggregate_observations{clause}", parameters,
+    ).fetchone()
+    return {
+        "datasets": _rows(connection, """
+            SELECT table_number, title, publisher, source_url, retrieval_date,
+                   definition_notes, extraction_criteria
+            FROM datasets ORDER BY table_number
+        """),
+        "reference_periods": {"first": period[0], "last": period[1], "count": period[2]},
+        "uom": [row[0] for row in connection.execute(
+            f"SELECT DISTINCT uom FROM aggregate_observations{clause} ORDER BY uom", parameters
+        )],
+        "status_flags": [row[0] for row in connection.execute(
+            f"SELECT DISTINCT COALESCE(NULLIF(status, ''), 'none') FROM aggregate_observations{clause} "
+            "ORDER BY COALESCE(NULLIF(status, ''), 'none')", parameters
+        )],
+        "interpretation_disclaimer": AGGREGATE_DISCLAIMER,
+    }
+
+
+def aggregate_filter_values(database_path):
+    with _connect(database_path) as connection:
+        return {
+            "geo": [row[0] for row in connection.execute("SELECT DISTINCT geo FROM aggregate_observations ORDER BY geo")],
+            "dynamics": [row[0] for row in connection.execute("SELECT DISTINCT business_dynamics FROM aggregate_observations ORDER BY business_dynamics")],
+            "employment_size": [row[0] for row in connection.execute("SELECT DISTINCT employment_size FROM aggregate_observations ORDER BY employment_size")],
+        }
+
+
+def aggregate_summary(database_path):
+    with _connect(database_path) as connection:
+        metadata = _aggregate_metadata(connection)
+        metadata.update({
+            "observation_count": connection.execute("SELECT COUNT(*) FROM aggregate_observations").fetchone()[0],
+            "geographies": _rows(connection, """
+                SELECT geo, COUNT(*) AS observation_count
+                FROM aggregate_observations GROUP BY geo ORDER BY geo
+            """),
+            "dynamics": _rows(connection, """
+                SELECT business_dynamics AS dynamics, COUNT(*) AS observation_count
+                FROM aggregate_observations GROUP BY business_dynamics ORDER BY business_dynamics
+            """),
+        })
+        return metadata
+
+
+def _aggregate_rows(database_path, order_by, filters, limit):
+    """Return source observations without summing overlapping categories or tables."""
+    clauses, parameters = [], []
+    for field, value in filters.items():
+        if value is not None:
+            clauses.append(f"o.{field} = ?")
+            parameters.append(value)
+    where = " AND ".join(clauses)
+    where_sql = f" WHERE {where}" if where else ""
+    metadata_where = where.replace("o.", "")
+    with _connect(database_path) as connection:
+        rows = _rows(connection, f"""
+            SELECT o.reference_period, o.geo, o.naics, o.employment_size,
+                   o.business_dynamics, o.uom, o.value,
+                   COALESCE(NULLIF(o.status, ''), 'none') AS status_flag,
+                   o.table_number, o.source_url, o.retrieval_date
+            FROM aggregate_observations AS o{where_sql}
+            ORDER BY {order_by}, o.table_number, o.aggregate_observation_id
+            LIMIT ?
+        """, tuple(parameters + [limit]))
+        return {"filters": {key: value for key, value in filters.items() if value is not None},
+                "rows": rows,
+                "metadata": _aggregate_metadata(connection, metadata_where, tuple(parameters))}
+
+
+def aggregate_trends(database_path, geo=None, dynamics=None, limit=500):
+    return _aggregate_rows(database_path, "o.reference_period, o.geo, o.business_dynamics",
+                           {"geo": geo, "business_dynamics": dynamics}, limit)
+
+
+def aggregate_by_size(database_path, geo=None, dynamics=None, limit=500):
+    return _aggregate_rows(database_path, "o.employment_size, o.geo, o.business_dynamics, o.reference_period",
+                           {"geo": geo, "business_dynamics": dynamics}, limit)
+
+
+def aggregate_by_industry(database_path, geo=None, employment_size=None, dynamics=None, limit=500):
+    return _aggregate_rows(database_path, "o.naics, o.geo, o.employment_size, o.business_dynamics, o.reference_period",
+                           {"geo": geo, "employment_size": employment_size, "business_dynamics": dynamics}, limit)
+
+
 def to_json(value):
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))

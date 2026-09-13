@@ -5,7 +5,47 @@ import argparse
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from urllib.parse import parse_qs, unquote, urlsplit
+
+
+AGGREGATE_PARAMS = {
+    "/aggregate/summary": set(),
+    "/aggregate/trends": {"geo", "dynamics", "limit"},
+    "/aggregate/by-size": {"geo", "dynamics", "limit"},
+    "/aggregate/by-industry": {"geo", "dynamics", "employment_size", "limit"},
+}
+MAX_AGGREGATE_LIMIT = 500
+
+
+def aggregate_query(database_path, path, query):
+    """Validate bounded aggregate filters before executing a read-only query."""
+    params = parse_qs(query, keep_blank_values=True)
+    unexpected = set(params).difference(AGGREGATE_PARAMS[path])
+    if unexpected or any(len(values) != 1 or not values[0] for values in params.values()):
+        return 400, {"error": "invalid query parameters"}
+    limit = 500
+    if "limit" in params:
+        try:
+            limit = int(params["limit"][0])
+        except ValueError:
+            return 400, {"error": "limit must be an integer"}
+        if not 1 <= limit <= MAX_AGGREGATE_LIMIT:
+            return 400, {"error": f"limit must be between 1 and {MAX_AGGREGATE_LIMIT}"}
+    filters = {name: params.get(name, [None])[0] for name in ("geo", "dynamics", "employment_size")}
+    valid = intelligence.aggregate_filter_values(database_path)
+    for name, value in filters.items():
+        if value is not None and value not in valid[name]:
+            return 404, {"error": f"{name} not found"}
+    if path == "/aggregate/summary":
+        return 200, intelligence.aggregate_summary(database_path)
+    if path == "/aggregate/trends":
+        return 200, intelligence.aggregate_trends(database_path, filters["geo"], filters["dynamics"], limit)
+    if path == "/aggregate/by-size":
+        return 200, intelligence.aggregate_by_size(database_path, filters["geo"], filters["dynamics"], limit)
+    return 200, intelligence.aggregate_by_industry(
+        database_path, filters["geo"], filters["employment_size"], filters["dynamics"], limit
+    )
+
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -32,7 +72,11 @@ def create_server(host, port, database_path):
             self.wfile.write(body)
 
         def do_GET(self):
-            path = urlsplit(self.path).path
+            request = urlsplit(self.path)
+            path = request.path
+            if path in AGGREGATE_PARAMS:
+                status, payload = aggregate_query(database_path, path, request.query)
+                return self._json(status, payload)
             if path == "/health":
                 return self._json(200, {"status": "ok"})
             if path == "/summary":
