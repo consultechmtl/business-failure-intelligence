@@ -113,6 +113,26 @@ class ValidateDataTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("source_url is required for cause assertion", result.stderr)
 
+    def test_validates_optional_warning_signs_foreign_keys_confidence_and_unique_ids(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_corpus(root)
+            warning_path = root / "data" / "curated" / "warning_signs.csv"
+            with warning_path.open("w", newline="", encoding="utf-8") as handle:
+                csv.writer(handle).writerows(
+                    [
+                        ["warning_id", "company_id", "signal_code", "observed_text", "observed_date", "source_id", "confidence"],
+                        ["fixture-warning", "fixture-co", "demand", "Demand was weak.", "2026-01-01", "fixture-source", "high"],
+                        ["fixture-warning", "missing-company", "demand", "Demand was weak.", "", "missing-source", "certain"],
+                    ]
+                )
+            result = validate(root)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("duplicate warning_id", result.stderr)
+        self.assertIn("unknown company_id", result.stderr)
+        self.assertIn("unknown source_id", result.stderr)
+        self.assertIn("invalid confidence", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

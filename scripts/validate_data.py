@@ -14,6 +14,10 @@ TABLES = {
     "cause_assertions": ("cause_assertions.csv", ["assertion_id", "company_id", "cause_code", "source_id", "assertion_type", "confidence", "evidence_quote", "analyst_note"]),
     "lessons": ("lessons.csv", ["lesson_id", "company_id", "lesson", "applicability", "action_for_founder", "confidence"]),
 }
+WARNING_SIGNS = (
+    "warning_signs.csv",
+    ["warning_id", "company_id", "signal_code", "observed_text", "observed_date", "source_id", "confidence"],
+)
 OUTCOME_TYPES = {"shutdown", "bankruptcy", "insolvency", "distress", "acquisition", "asset_sale", "pivot", "dormant", "unknown"}
 CONFIDENCES = {"high", "medium", "low"}
 ASSERTION_TYPES = {"explicit_founder_statement", "court_or_regulatory_finding", "contemporaneous_reporting", "editorial_classification", "analyst_inference"}
@@ -54,12 +58,19 @@ def validate(data_dir, taxonomy_path):
         table: read_table(data_dir, filename, columns, errors)
         for table, (filename, columns) in TABLES.items()
     }
+    warning_filename, warning_columns = WARNING_SIGNS
+    warning_path = data_dir / warning_filename
+    if warning_path.exists():
+        rows["warning_signs"] = read_table(data_dir, warning_filename, warning_columns, errors)
+    else:
+        rows["warning_signs"] = []
     ids = {
         "companies": unique_ids(rows["companies"], "companies.csv", "company_id", errors),
         "outcomes": unique_ids(rows["outcomes"], "outcomes.csv", "outcome_id", errors),
         "sources": unique_ids(rows["sources"], "sources.csv", "source_id", errors),
         "cause_assertions": unique_ids(rows["cause_assertions"], "cause_assertions.csv", "assertion_id", errors),
         "lessons": unique_ids(rows["lessons"], "lessons.csv", "lesson_id", errors),
+        "warning_signs": unique_ids(rows["warning_signs"], "warning_signs.csv", "warning_id", errors),
     }
 
     cause_codes = set()
@@ -98,6 +109,22 @@ def validate(data_dir, taxonomy_path):
         if row["confidence"].strip() not in CONFIDENCES:
             errors.append(f"lessons.csv: row {line_number}: invalid confidence: {row['confidence']}")
 
+    for line_number, row in enumerate(rows["warning_signs"], start=2):
+        company_id = row["company_id"].strip()
+        source_id = row["source_id"].strip()
+        if not row["signal_code"].strip():
+            errors.append(f"warning_signs.csv: row {line_number}: signal_code is required")
+        if not row["observed_text"].strip():
+            errors.append(f"warning_signs.csv: row {line_number}: observed_text is required")
+        if company_id not in ids["companies"]:
+            errors.append(f"warning_signs.csv: row {line_number}: unknown company_id: {company_id}")
+        if source_id not in ids["sources"]:
+            errors.append(f"warning_signs.csv: row {line_number}: unknown source_id: {source_id}")
+        elif not source_urls[source_id]:
+            errors.append(f"warning_signs.csv: row {line_number}: source_url is required for warning sign")
+        if row["confidence"].strip() not in CONFIDENCES:
+            errors.append(f"warning_signs.csv: row {line_number}: invalid confidence: {row['confidence']}")
+
     return errors, sum(len(table_rows) for table_rows in rows.values())
 
 
@@ -112,7 +139,8 @@ def main():
     if errors:
         print("Validation failed:", *errors, sep="\n", file=sys.stderr)
         return 1
-    print(f"Validation passed: {row_count} rows across {len(TABLES)} curated files.")
+    curated_file_count = len(TABLES) + int((args.data_dir / WARNING_SIGNS[0]).exists())
+    print(f"Validation passed: {row_count} rows across {curated_file_count} curated files.")
     return 0
 
 

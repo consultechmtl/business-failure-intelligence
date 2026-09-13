@@ -51,6 +51,9 @@ python3 scripts/load_sqlite.py --db data/business_failure.sqlite
 # Query loaded data with the Python standard library.
 python3 -c "import sqlite3; connection = sqlite3.connect('data/business_failure.sqlite'); print(connection.execute('SELECT confidence, COUNT(*) FROM cause_assertions GROUP BY confidence ORDER BY confidence').fetchall())"
 
+# Inspect evidence-linked warning signs in chronological order.
+python3 -c "import sqlite3; connection = sqlite3.connect('data/business_failure.sqlite'); print(connection.execute('SELECT company_id, signal_code, observed_date, observed_text FROM warning_signs ORDER BY observed_date IS NULL, observed_date, company_id').fetchall())"
+
 # Load a temporary SQLite database and print descriptive corpus summaries.
 python3 scripts/analyze_corpus.py
 

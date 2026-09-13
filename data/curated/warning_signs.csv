@@ -1,0 +1,11 @@
+warning_id,company_id,signal_code,observed_text,observed_date,source_id,confidence
+wesabe-aggregation-gap,wesabe,product_dependency,"we chose not to work with Yodlee, but failed to find or make a replacement for them (until too late).",,wesabe-hedlund-2010,high
+rethinkdb-market-choice,rethinkdb,market_selection,we picked a terrible market,,rethinkdb-akhmechet-2017,high
+rethinkdb-low-wtp,rethinkdb,willingness_to_pay,most were willing to pay less for the lifetime of usage than the price of a single Starbucks coffee,,rethinkdb-akhmechet-2017,high
+tract-low-wtp,tract,willingness_to_pay,encountered a low willingness to pay for useful tools,,tract-postmortem-2025,high
+tract-business-development,tract,commercial_focus,Focussed too much on technology over business development.,,tract-postmortem-2025,high
+advisable-profitability,advisable,product_viability,we haven't been able to get this new version working well enough to be investible or profitable.,,advisable-postmortem-2022,high
+spreadable-market-size,spreadable,market_size,The size of the market for the product we had built was significantly smaller,,spreadable-postmortem,high
+juked-sector-funding,juked,investor_sentiment,the esports industry as a whole had begun losing luster in the eyes of investors and media.,,juked-goldhaber-2022,medium
+sentar-decision-conflict,sentar,team_governance,we just argued until someone won.,,sentar-lasse,high
+target-canada-stockouts,target-canada,operational_execution,"significant problems" keeping the shelves fully stocked,2015-01-16,target-canada-star-2015,high

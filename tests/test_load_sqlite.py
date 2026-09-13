@@ -22,9 +22,20 @@ class LoadSqliteTests(unittest.TestCase):
             database_path = Path(directory) / "corpus.sqlite"
             result = self.run_loader(database_path)
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("Loaded 112 rows", result.stdout)
+            self.assertIn("Loaded 122 rows", result.stdout)
 
             with sqlite3.connect(database_path) as connection:
+                warning_count = connection.execute("SELECT COUNT(*) FROM warning_signs").fetchone()[0]
+                warning_joined_count = connection.execute(
+                    """
+                    SELECT COUNT(*)
+                    FROM warning_signs AS warning
+                    JOIN companies AS company ON company.company_id = warning.company_id
+                    JOIN sources AS source ON source.source_id = warning.source_id
+                    """
+                ).fetchone()[0]
+                self.assertEqual(warning_count, 10)
+                self.assertEqual(warning_joined_count, warning_count)
                 assertion_count = connection.execute("SELECT COUNT(*) FROM cause_assertions").fetchone()[0]
                 joined_count = connection.execute(
                     """
