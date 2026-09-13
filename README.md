@@ -40,9 +40,13 @@ Optional table 33-10-0270-01 source:
 `https://www150.statcan.gc.ca/n1/tbl/csv/33100270-eng.zip`
 
 The normalizer filters to GEO `Canada` and `Quebec`, preserving reference
-period, GEO, NAICS, employment size, business dynamics, UOM, VALUE, STATUS,
-table number, source URL, and retrieval date. It retains all available NAICS
-and employment-size categories and only `Openings`/`Closures` with a VALUE.
+period, GEO, Industry/NAICS, employment size (or an explicit unavailable marker
+when a source table has no such dimension), business dynamics, UOM, VALUE,
+STATUS, table number, source URL, and retrieval date. It retains all available
+Industry/NAICS and employment-size categories and only `Openings`/`Closures`
+with a VALUE. The 2026-09-13 extracts originate from the official archives
+provided at `/mnt/c/Users/Executor/Downloads/33100722-eng.zip` and
+`/mnt/c/Users/Executor/Downloads/33100270-eng.zip`; raw ZIPs remain outside git.
 
 “Closures” is Statistics Canada's published business-dynamics label. It is
 **not** an assertion of permanent enterprise death, insolvency, bankruptcy, or

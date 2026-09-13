@@ -52,6 +52,26 @@ class AggregateLayerTests(unittest.TestCase):
         self.assertEqual(normalized[0]["business_dynamics"], "Openings")
         self.assertEqual(normalized[0]["table_number"], "33-10-0722-01")
 
+    def test_normalizer_supports_current_statcan_business_dynamics_headers(self):
+        from normalize_statcan import normalize_rows
+
+        rows = [
+            {
+                "REF_DATE": "2026-07",
+                "GEO": "Quebec",
+                "Industry": "Business sector industries [T004]",
+                "Employment size": "Total, all employment sizes",
+                "Business dynamics measure": "Business closures",
+                "UOM": "Number",
+                "VALUE": "123",
+                "STATUS": "",
+            }
+        ]
+        normalized = normalize_rows(rows, "33100722", {"Canada", "Quebec"})
+        self.assertEqual(len(normalized), 1)
+        self.assertEqual(normalized[0]["naics"], "Business sector industries [T004]")
+        self.assertEqual(normalized[0]["business_dynamics"], "Closures")
+
     def test_loader_creates_aggregate_tables_without_company_relationships(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -67,7 +87,7 @@ class AggregateLayerTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             with sqlite3.connect(database) as connection:
                 self.assertGreater(connection.execute("SELECT COUNT(*) FROM datasets").fetchone()[0], 0)
-                self.assertEqual(connection.execute("SELECT COUNT(*) FROM aggregate_observations").fetchone()[0], 0)
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM aggregate_observations").fetchone()[0], 50862)
                 self.assertEqual(connection.execute("PRAGMA foreign_key_check").fetchall(), [])
                 columns = {row[1] for row in connection.execute("PRAGMA table_info(aggregate_observations)")}
                 self.assertNotIn("company_id", columns)

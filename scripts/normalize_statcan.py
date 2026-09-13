@@ -47,12 +47,18 @@ def normalize_rows(rows, table_id, geos):
         value = pick(row, "VALUE")
         if not value:
             continue
-        dynamics = pick(row, "Business dynamics")
+        dynamics = pick(row, "Business dynamics", "Business dynamics measure")
+        dynamics = {
+            "Business openings": "Openings",
+            "Opening businesses": "Openings",
+            "Business closures": "Closures",
+            "Closing businesses": "Closures",
+        }.get(dynamics, dynamics)
         if dynamics not in {"Openings", "Closures"}:
             continue
         reference_period = pick(row, "REF_DATE")
-        naics = pick(row, "North American Industry Classification System (NAICS)", "NAICS")
-        employment_size = pick(row, "Employment size")
+        naics = pick(row, "North American Industry Classification System (NAICS)", "NAICS", "Industry")
+        employment_size = pick(row, "Employment size") or "Not available (table does not provide employment size)"
         uom = pick(row, "UOM")
         if not all((reference_period, naics, employment_size, uom)):
             continue
@@ -102,7 +108,7 @@ def main():
     fields = list(records[0]) + ["retrieval_date"] if records else ["aggregate_observation_id", "dataset_id", "sample_frame_id", "observation_unit_id", "outcome_definition_id", "reference_period", "geo", "naics", "employment_size", "business_dynamics", "uom", "value", "status", "table_number", "source_url", "retrieval_date"]
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer = csv.DictWriter(handle, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         for record in records:
             record["retrieval_date"] = args.retrieval_date
