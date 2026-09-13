@@ -37,6 +37,21 @@ Phase 0: schema and source registry. The project intentionally starts with a sma
 
 Build a reviewed seed set of 25-50 cases, including Quebec/Canadian cases, with at least one source quotation per coded cause. Do not claim completeness.
 
+## Additive normalization (v1)
+
+The original human-readable `companies` fields (`industry`, `business_model`,
+`country_code`, `region_code`, and `city`) remain available for backward
+compatibility. v1 adds nullable `industry_code`, `business_model_code`, and
+`geography_code` references plus four curated tables:
+
+- `industries.csv` and `business_models.csv`: bilingual controlled vocabularies.
+- `geographies.csv`: countries, Canadian regions, and only municipalities already evidenced by a company record.
+- `entity_aliases.csv`: canonical, legal, brand, or former legal names with a language code; accents are retained.
+
+Codes are populated only where the reviewed company record supports the value.
+Blank codes mean the corpus does not yet support a normalized classification or
+geography; they are not inferred from a name or source.
+
 ## Validate, load, query, and test
 
 Run these commands from the repository root:

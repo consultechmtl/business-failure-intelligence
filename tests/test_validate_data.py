@@ -9,8 +9,25 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 VALID_ROWS = {
     "companies.csv": [
-        ["company_id", "canonical_name", "legal_name", "country_code", "region_code", "city", "founded_year", "industry", "business_model", "description"],
-        ["fixture-co", "Fixture Co", "", "CA", "QC", "", "", "", "", ""],
+        ["company_id", "canonical_name", "legal_name", "country_code", "region_code", "city", "founded_year", "industry", "business_model", "description", "industry_code", "business_model_code", "geography_code"],
+        ["fixture-co", "Fixture Co", "", "CA", "QC", "", "", "", "", "", "software", "b2b-saas", "CA-QC"],
+    ],
+    "industries.csv": [
+        ["industry_code", "label_en", "label_fr", "description"],
+        ["software", "Software", "Logiciels", "Software products and services."],
+    ],
+    "business_models.csv": [
+        ["business_model_code", "label_en", "label_fr", "description"],
+        ["b2b-saas", "B2B software as a service", "Logiciel-service B2B", "Business software sold as a service."],
+    ],
+    "geographies.csv": [
+        ["geography_code", "parent_geography_code", "geography_type", "country_code", "region_code", "municipality", "name_en", "name_fr"],
+        ["CA", "", "country", "CA", "", "", "Canada", "Canada"],
+        ["CA-QC", "CA", "region", "CA", "QC", "", "Quebec", "Québec"],
+    ],
+    "entity_aliases.csv": [
+        ["alias_id", "company_id", "alias_name", "alias_type", "language_code"],
+        ["fixture-co-canonical", "fixture-co", "Fixture Co", "canonical", "en"],
     ],
     "outcomes.csv": [
         ["outcome_id", "company_id", "outcome_type", "outcome_date", "jurisdiction", "status", "notes"],
@@ -51,7 +68,7 @@ def validate(root):
 
 
 class ValidateDataTests(unittest.TestCase):
-    def test_accepts_a_valid_fixture(self):
+    def test_accepts_a_valid_fixture_with_normalized_references(self):
         with tempfile.TemporaryDirectory() as directory:
             write_corpus(Path(directory))
             result = validate(Path(directory))
@@ -77,6 +94,22 @@ class ValidateDataTests(unittest.TestCase):
             result = validate(root)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("duplicate company_id", result.stderr)
+
+    def test_rejects_invalid_normalized_foreign_keys(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            company_rows = [row[:] for row in VALID_ROWS["companies.csv"]]
+            company_rows[1][10] = "missing-industry"
+            alias_rows = [row[:] for row in VALID_ROWS["entity_aliases.csv"]]
+            alias_rows[1][1] = "missing-company"
+            geography_rows = [row[:] for row in VALID_ROWS["geographies.csv"]]
+            geography_rows[1][1] = "missing-parent"
+            write_corpus(root, {"companies.csv": company_rows, "entity_aliases.csv": alias_rows, "geographies.csv": geography_rows})
+            result = validate(root)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unknown industry_code", result.stderr)
+        self.assertIn("unknown company_id", result.stderr)
+        self.assertIn("unknown parent_geography_code", result.stderr)
 
     def test_rejects_invalid_foreign_keys(self):
         with tempfile.TemporaryDirectory() as directory:

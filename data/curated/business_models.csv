@@ -1,0 +1,17 @@
+business_model_code,label_en,label_fr,description
+b2b-software,B2B software,Logiciel B2B,Software sold to business customers.
+b2b-saas,B2B software as a service,Logiciel-service B2B,Business software delivered as a service.
+consumer-app,Consumer application,Application grand public,Application primarily used by consumers.
+consumer-web,Consumer web,Web grand public,Web product primarily used by consumers.
+cryptocurrency-exchange,Cryptocurrency exchange,Bourse de cryptomonnaies,Platform for trading crypto-assets.
+discount-department-stores,Discount department stores,Grands magasins à rabais,Discount department-store retail.
+flash-sale-marketplace,Flash-sale marketplace,Place de marché de ventes flash,Marketplace for time-limited retail sales.
+junior-mining,Junior mining,Société minière junior,Early-stage mineral exploration company.
+live-events-and-media,Live events and media,Événements et médias,Live-event and media business.
+marketplace,Marketplace,Place de marché,Platform connecting multiple sides of a market.
+mobile-software,Mobile software,Logiciel mobile,Software delivered for mobile devices.
+omnichannel-retail,Omnichannel retail,Commerce omnicanal,Retail across physical and digital channels.
+open-source-developer-tools,Open-source developer tools,Outils de développement libres,Open-source tools for software developers.
+startup,Startup,Jeune pousse,Early-stage venture without a more specific evidenced model.
+specialty-retail,Specialty retail,Commerce de détail spécialisé,Retail focused on a specialized category.
+vehicle-manufacturing,Vehicle manufacturing,Fabrication de véhicules,Manufacture of vehicles.

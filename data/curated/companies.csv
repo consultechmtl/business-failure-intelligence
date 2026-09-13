@@ -1,22 +1,22 @@
-company_id,canonical_name,legal_name,country_code,region_code,city,founded_year,industry,business_model,description
-wesabe,Wesabe,,US,CA,San Francisco,2005,financial technology,consumer web,Personal-finance management service.
-rethinkdb,RethinkDB,,US,,,2009,database software,open-source developer tools,Open-source database company.
-tract,Tract,,GB,,London,2023,property technology,B2B software,Planning-permission software startup.
-advisable,Advisable,,GB,,,2018,freelance marketplace,marketplace,Freelance-marketplace startup.
-spreadable,Spreadable,,US,,,,marketing software,B2B software,Referral-program software product of Grasshopper Group.
-juked,Juked,,US,CA,Los Angeles,2019,esports media,consumer app,Esports schedule and social community.
-siempo,"Siempo, Inc.",,US,,Chicago,2016,consumer technology,mobile software,Humane smartphone-interface startup.
-sentar,Sentar,,,,,,social impact technology,startup,Early-stage startup described by its founders.
-helmet,Helmet,,,,,2025,mental health,startup,Mental-health startup.
-skillstackers,SkillStackers,,US,PA,Philadelphia,2017,business services,marketplace,Task and automation startup using a Philippines-based remote workforce.
-bre-x,Bre-X Minerals,"Bre-X Minerals Ltd.",CA,AB,Calgary,1989,mineral exploration,junior mining,Canadian junior mining company focused on the Busang project in Indonesia.
-davidstea,DAVIDsTEA,"DAVIDsTEA Inc.",CA,QC,Montréal,2008,specialty retail,omnichannel retail,Montréal-headquartered specialty tea retailer and wholesaler.
-quadriga,QuadrigaCX,"Quadriga Fintech Solutions Corp.",CA,NS,Fall River,2013,financial technology,cryptocurrency exchange,Canadian crypto-asset trading platform operated by Quadriga Fintech Solutions Corp.
-target-canada,Target Canada,"Target Canada Co.",CA,ON,Mississauga,2011,retail,discount department stores,Canadian subsidiary that operated Target discount department stores.
-zenn,ZENN,"ZENN Motor Company Inc.",CA,ON,Toronto,2000,electric vehicles,vehicle manufacturing,Canadian manufacturer of low-speed electric vehicles; production was in Saint-Jérôme Quebec.
-taiga-motors,Taiga Motors,"Taiga Motors Corporation",CA,QC,Montréal,2015,electric vehicles,vehicle manufacturing,Montréal electric snowmobile and personal-watercraft manufacturer.
-lion-electric,Lion Electric,"The Lion Electric Company",CA,QC,Saint-Jérôme,2008,electric vehicles,vehicle manufacturing,Québec manufacturer of all-electric medium- and heavy-duty urban vehicles.
-frank-and-oak,Frank And Oak,"UCG Canada Holdings Inc.",CA,QC,Montréal,2012,apparel retail,omnichannel retail,Montréal-founded apparel brand operated by UCG Canada Holdings Inc.
-just-for-laughs,Just for Laughs,"Gestion Juste Pour Rire Inc.",CA,QC,Montréal,1983,entertainment,live events and media,Montréal comedy festival and entertainment group.
-le-chateau,Le Château,"Le Château Inc.",CA,QC,Montréal,1959,apparel retail,specialty retail,Québec specialty fashion retailer.
-beyond-the-rack,Beyond the Rack,"Beyond The Rack Enterprises Inc.",CA,QC,Saint-Laurent,2009,e-commerce,flash-sale marketplace,Montréal-area online flash-sale retailer; debtor was renamed 7098961 Canada Inc.
+company_id,canonical_name,legal_name,country_code,region_code,city,founded_year,industry,business_model,description,industry_code,business_model_code,geography_code
+wesabe,Wesabe,,US,CA,San Francisco,2005,financial technology,consumer web,Personal-finance management service.,financial-technology,consumer-web,US-CA-San-Francisco
+rethinkdb,RethinkDB,,US,,,2009,database software,open-source developer tools,Open-source database company.,database-software,open-source-developer-tools,
+tract,Tract,,GB,,London,2023,property technology,B2B software,Planning-permission software startup.,property-technology,b2b-software,GB-London
+advisable,Advisable,,GB,,,2018,freelance marketplace,marketplace,Freelance-marketplace startup.,freelance-marketplace,marketplace,
+spreadable,Spreadable,,US,,,,marketing software,B2B software,Referral-program software product of Grasshopper Group.,marketing-software,b2b-software,
+juked,Juked,,US,CA,Los Angeles,2019,esports media,consumer app,Esports schedule and social community.,esports-media,consumer-app,US-CA-Los-Angeles
+siempo,"Siempo, Inc.",,US,,Chicago,2016,consumer technology,mobile software,Humane smartphone-interface startup.,consumer-technology,mobile-software,US-IL-Chicago
+sentar,Sentar,,,,,,social impact technology,startup,Early-stage startup described by its founders.,social-impact-technology,startup,
+helmet,Helmet,,,,,2025,mental health,startup,Mental-health startup.,mental-health,startup,
+skillstackers,SkillStackers,,US,PA,Philadelphia,2017,business services,marketplace,Task and automation startup using a Philippines-based remote workforce.,business-services,marketplace,US-PA-Philadelphia
+bre-x,Bre-X Minerals,"Bre-X Minerals Ltd.",CA,AB,Calgary,1989,mineral exploration,junior mining,Canadian junior mining company focused on the Busang project in Indonesia.,mineral-exploration,junior-mining,CA-AB-Calgary
+davidstea,DAVIDsTEA,"DAVIDsTEA Inc.",CA,QC,Montréal,2008,specialty retail,omnichannel retail,Montréal-headquartered specialty tea retailer and wholesaler.,specialty-retail,omnichannel-retail,CA-QC-Montreal
+quadriga,QuadrigaCX,"Quadriga Fintech Solutions Corp.",CA,NS,Fall River,2013,financial technology,cryptocurrency exchange,Canadian crypto-asset trading platform operated by Quadriga Fintech Solutions Corp.,financial-technology,cryptocurrency-exchange,CA-NS-Fall-River
+target-canada,Target Canada,"Target Canada Co.",CA,ON,Mississauga,2011,retail,discount department stores,Canadian subsidiary that operated Target discount department stores.,retail,discount-department-stores,CA-ON-Mississauga
+zenn,ZENN,"ZENN Motor Company Inc.",CA,ON,Toronto,2000,electric vehicles,vehicle manufacturing,Canadian manufacturer of low-speed electric vehicles; production was in Saint-Jérôme Quebec.,electric-vehicles,vehicle-manufacturing,CA-ON-Toronto
+taiga-motors,Taiga Motors,"Taiga Motors Corporation",CA,QC,Montréal,2015,electric vehicles,vehicle manufacturing,Montréal electric snowmobile and personal-watercraft manufacturer.,electric-vehicles,vehicle-manufacturing,CA-QC-Montreal
+lion-electric,Lion Electric,"The Lion Electric Company",CA,QC,Saint-Jérôme,2008,electric vehicles,vehicle manufacturing,Québec manufacturer of all-electric medium- and heavy-duty urban vehicles.,electric-vehicles,vehicle-manufacturing,CA-QC-Saint-Jerome
+frank-and-oak,Frank And Oak,"UCG Canada Holdings Inc.",CA,QC,Montréal,2012,apparel retail,omnichannel retail,Montréal-founded apparel brand operated by UCG Canada Holdings Inc.,apparel-retail,omnichannel-retail,CA-QC-Montreal
+just-for-laughs,Just for Laughs,"Gestion Juste Pour Rire Inc.",CA,QC,Montréal,1983,entertainment,live events and media,Montréal comedy festival and entertainment group.,entertainment,live-events-and-media,CA-QC-Montreal
+le-chateau,Le Château,"Le Château Inc.",CA,QC,Montréal,1959,apparel retail,specialty retail,Québec specialty fashion retailer.,apparel-retail,specialty-retail,CA-QC-Montreal
+beyond-the-rack,Beyond the Rack,"Beyond The Rack Enterprises Inc.",CA,QC,Saint-Laurent,2009,e-commerce,flash-sale marketplace,Montréal-area online flash-sale retailer; debtor was renamed 7098961 Canada Inc.,e-commerce,flash-sale-marketplace,CA-QC-Saint-Laurent

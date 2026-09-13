@@ -1,0 +1,20 @@
+geography_code,parent_geography_code,geography_type,country_code,region_code,municipality,name_en,name_fr
+CA,,country,CA,,,Canada,Canada
+CA-AB,CA,region,CA,AB,,Alberta,Alberta
+CA-NS,CA,region,CA,NS,,Nova Scotia,Nouvelle-Écosse
+CA-ON,CA,region,CA,ON,,Ontario,Ontario
+CA-QC,CA,region,CA,QC,,Quebec,Québec
+US,,country,US,,,United States,États-Unis
+GB,,country,GB,,,United Kingdom,Royaume-Uni
+CA-AB-Calgary,CA-AB,municipality,CA,AB,Calgary,Calgary,Calgary
+CA-NS-Fall-River,CA-NS,municipality,CA,NS,Fall River,Fall River,Fall River
+CA-ON-Mississauga,CA-ON,municipality,CA,ON,Mississauga,Mississauga,Mississauga
+CA-ON-Toronto,CA-ON,municipality,CA,ON,Toronto,Toronto,Toronto
+CA-QC-Montreal,CA-QC,municipality,CA,QC,Montréal,Montreal,Montréal
+CA-QC-Saint-Jerome,CA-QC,municipality,CA,QC,Saint-Jérôme,Saint-Jérôme,Saint-Jérôme
+CA-QC-Saint-Laurent,CA-QC,municipality,CA,QC,Saint-Laurent,Saint-Laurent,Saint-Laurent
+US-CA-Los-Angeles,US,municipality,US,CA,Los Angeles,Los Angeles,Los Angeles
+US-CA-San-Francisco,US,municipality,US,CA,San Francisco,San Francisco,San Francisco
+US-IL-Chicago,US,municipality,US,IL,Chicago,Chicago,Chicago
+US-PA-Philadelphia,US,municipality,US,PA,Philadelphia,Philadelphia,Philadelphia
+GB-London,GB,municipality,GB,,London,London,Londres

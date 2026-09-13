@@ -1,0 +1,33 @@
+alias_id,company_id,alias_name,alias_type,language_code
+wesabe-canonical,wesabe,Wesabe,canonical,en
+rethinkdb-canonical,rethinkdb,RethinkDB,canonical,en
+tract-canonical,tract,Tract,canonical,en
+advisable-canonical,advisable,Advisable,canonical,en
+spreadable-canonical,spreadable,Spreadable,canonical,en
+juked-canonical,juked,Juked,canonical,en
+siempo-canonical,siempo,"Siempo, Inc.",canonical,en
+sentar-canonical,sentar,Sentar,canonical,en
+helmet-canonical,helmet,Helmet,canonical,en
+skillstackers-canonical,skillstackers,SkillStackers,canonical,en
+bre-x-canonical,bre-x,Bre-X Minerals,canonical,en
+bre-x-legal,bre-x,Bre-X Minerals Ltd.,legal,en
+davidstea-canonical,davidstea,DAVIDsTEA,canonical,en
+davidstea-legal,davidstea,DAVIDsTEA Inc.,legal,en
+quadriga-canonical,quadriga,QuadrigaCX,canonical,en
+quadriga-legal,quadriga,Quadriga Fintech Solutions Corp.,legal,en
+target-canada-canonical,target-canada,Target Canada,canonical,en
+target-canada-legal,target-canada,Target Canada Co.,legal,en
+zenn-canonical,zenn,ZENN,canonical,en
+zenn-legal,zenn,ZENN Motor Company Inc.,legal,en
+taiga-motors-canonical,taiga-motors,Taiga Motors,canonical,en
+taiga-motors-legal,taiga-motors,Taiga Motors Corporation,legal,en
+lion-electric-canonical,lion-electric,Lion Electric,canonical,en
+lion-electric-legal,lion-electric,The Lion Electric Company,legal,en
+frank-and-oak-canonical,frank-and-oak,Frank And Oak,canonical,en
+frank-and-oak-legal,frank-and-oak,UCG Canada Holdings Inc.,legal,en
+just-for-laughs-canonical,just-for-laughs,Just for Laughs,canonical,en
+just-for-laughs-legal,just-for-laughs,Gestion Juste Pour Rire Inc.,legal,fr
+le-chateau-canonical,le-chateau,Le Château,canonical,fr
+le-chateau-legal,le-chateau,Le Château Inc.,legal,fr
+beyond-the-rack-canonical,beyond-the-rack,Beyond the Rack,canonical,en
+beyond-the-rack-legal,beyond-the-rack,Beyond The Rack Enterprises Inc.,legal,en

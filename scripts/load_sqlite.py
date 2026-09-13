@@ -10,7 +10,7 @@ from pathlib import Path
 from validate_data import TABLES, validate
 
 
-LOAD_ORDER = ("companies", "outcomes", "sources", "cause_assertions", "lessons")
+LOAD_ORDER = ("industries", "business_models", "geographies", "companies", "entity_aliases", "outcomes", "sources", "cause_assertions", "lessons")
 
 
 def read_rows(path):
@@ -24,9 +24,7 @@ def insert_rows(connection, table, columns, rows):
     placeholders = ", ".join("?" for _ in columns)
     column_names = ", ".join(columns)
     values = [tuple(row[column].strip() or None for column in columns) for row in rows]
-    connection.executemany(
-        f"INSERT INTO {table} ({column_names}) VALUES ({placeholders})", values
-    )
+    connection.executemany(f"INSERT INTO {table} ({column_names}) VALUES ({placeholders})", values)
     return len(values)
 
 
@@ -34,38 +32,21 @@ def load(database_path, data_dir, taxonomy_path, schema_path):
     errors, _ = validate(data_dir, taxonomy_path)
     if errors:
         raise ValueError("\n".join(errors))
-
     database_path.parent.mkdir(parents=True, exist_ok=True)
     if database_path.exists():
         database_path.unlink()
-
-    rows = {
-        table: read_rows(data_dir / filename)
-        for table, (filename, _) in TABLES.items()
-    }
+    rows = {table: read_rows(data_dir / filename) for table, (filename, _) in TABLES.items()}
     warning_path = data_dir / "warning_signs.csv"
     warnings = read_rows(warning_path) if warning_path.exists() else []
-
     with sqlite3.connect(database_path) as connection:
         connection.execute("PRAGMA foreign_keys = ON")
         connection.executescript(schema_path.read_text(encoding="utf-8"))
         counts = {}
-        counts["failure_causes"] = insert_rows(
-            connection,
-            "failure_causes",
-            ["cause_code", "parent_code", "label", "definition"],
-            read_rows(taxonomy_path),
-        )
+        counts["failure_causes"] = insert_rows(connection, "failure_causes", ["cause_code", "parent_code", "label", "definition"], read_rows(taxonomy_path))
         for table in LOAD_ORDER:
             _, columns = TABLES[table]
             counts[table] = insert_rows(connection, table, columns, rows[table])
-        counts["warning_signs"] = insert_rows(
-            connection,
-            "warning_signs",
-            ["warning_id", "company_id", "signal_code", "observed_text", "observed_date", "source_id", "confidence"],
-            warnings,
-        )
-
+        counts["warning_signs"] = insert_rows(connection, "warning_signs", ["warning_id", "company_id", "signal_code", "observed_text", "observed_date", "source_id", "confidence"], warnings)
     return counts
 
 
@@ -77,7 +58,6 @@ def main():
     parser.add_argument("--taxonomy", type=Path, default=root / "schema" / "cause_taxonomy.csv")
     parser.add_argument("--schema", type=Path, default=root / "schema" / "schema.sql")
     args = parser.parse_args()
-
     try:
         counts = load(args.db, args.data_dir, args.taxonomy, args.schema)
     except ValueError as error:
@@ -86,7 +66,6 @@ def main():
     except (OSError, sqlite3.Error) as error:
         print(f"Load failed: {error}", file=sys.stderr)
         return 1
-
     total = sum(counts.values())
     report = ", ".join(f"{table}={count}" for table, count in counts.items())
     print(f"Loaded {total} rows into {args.db}: {report}.")
