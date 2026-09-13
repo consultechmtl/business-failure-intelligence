@@ -176,6 +176,8 @@ def main():
         print("Validation failed:", *errors, sep="\n", file=sys.stderr)
         return 1
     curated_file_count = len(TABLES) + int((args.data_dir / WARNING_SIGNS[0]).exists())
+    if (args.data_dir / "datasets.csv").exists():
+        curated_file_count += len(AGGREGATE_TABLES) + 1
     print(f"Validation passed: {row_count} rows across {curated_file_count} curated files.")
     return 0
 
