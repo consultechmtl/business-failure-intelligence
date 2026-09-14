@@ -98,6 +98,37 @@ the loaded aggregate data. An invalid value returns `404`; unsupported,
 duplicate, blank, or out-of-range query parameters return `400`. Results are
 ordered deterministically and optional `limit` is bounded to 1–500.
 
+## Founder-profile insight API
+
+`/insights/profile` provides founder-selected context without converting the
+corpus into a score or causal model:
+
+```sh
+curl 'http://127.0.0.1:8000/insights/profile?geo=Quebec&industry=Electric%20vehicles&business_model_code=vehicle-manufacturing&employment_size=1%20to%204%20employees&limit=20'
+curl 'http://127.0.0.1:8000/insights/profile?geo=Canada&industry_code=financial-technology&limit=10'
+```
+
+It requires `geo` and an exact normalized `industry_code` or normalized industry
+label. Optional normalized `business_model_code` narrows narrative cases only;
+optional `employment_size` narrows Statistics Canada context only. `geo` applies
+to all three layers, while OSB has no industry or business-model filter in this
+endpoint. This is intentional: taxonomy codes from reviewed narrative cases are
+not a crosswalk to StatCan NAICS and OSB proceeding tables do not supply the
+profile dimensions needed for a valid match.
+
+The response has separately labeled `statistics_canada`, `osb_insolvencies`,
+and `narrative_cases` collections plus evidence-linked `warning_signs` and
+`causes` for the returned cases. Empty warning/cause collections mean no matching
+reviewed evidence exists; they are not filled by inference. Ordering is
+deterministic. Consult `docs/specs/founder-insights.md` for request validation
+and response boundaries.
+
+This endpoint does not predict failure, assign a risk score, join or total the
+layers, calculate a rate, or claim a warning sign/cause applies beyond its cited
+case. StatCan closures are not necessarily permanent deaths, and OSB proceedings
+are not all failures or permanent closures. The narrative corpus is
+non-representative and publication-biased.
+
 ### Safe language
 
 Describe these as **Statistics Canada business-dynamics observations** or

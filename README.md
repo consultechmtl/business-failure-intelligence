@@ -99,7 +99,27 @@ curl 'http://127.0.0.1:8000/aggregate/by-size?geo=Quebec'
 curl 'http://127.0.0.1:8000/aggregate/by-industry?geo=Quebec&employment_size=1%20to%204%20employees'
 curl 'http://127.0.0.1:8000/aggregate/insolvencies?geo=Quebec&period=2026-03&type=Bankruptcy'
 curl 'http://127.0.0.1:8000/aggregate/comparison?geo=Quebec&period_start=2026-01&period_end=2026-03&limit=50'
+curl 'http://127.0.0.1:8000/insights/profile?geo=Quebec&industry_code=electric-vehicles&business_model_code=vehicle-manufacturing&employment_size=1%20to%204%20employees&limit=20'
 ```
+
+## Founder-profile insights
+
+`GET /insights/profile` is a read-only, descriptive co-presentation endpoint.
+It requires `geo=Quebec|Canada` and either normalized `industry_code` or exact
+case-insensitive normalized industry text (`industry`). It optionally accepts
+`business_model_code`, `employment_size`, and `limit` (1–100, default 20).
+Unknown recognized filters return `404`; malformed, duplicate, blank,
+conflicting `industry_code`/`industry`, and unsupported filters return `400`.
+
+The response contains the resolved requested profile; Statistics Canada rows
+filtered only by compatible geography/employment-size dimensions; separately
+labeled OSB proceeding observations filtered by geography; exact normalized
+narrative matches; source-linked warning signs and cause assertions where the
+reviewed records contain them; provenance; and caveats. It deliberately does
+not map narrative taxonomy to StatCan NAICS, attach industry/model filters to
+OSB, join layers, calculate a rate, make causal claims, or return a predictive
+score. See `docs/specs/founder-insights.md` and `docs/analysis.md`.
+
 
 `/aggregate/comparison` co-presents separately labeled Statistics Canada
 openings/closures and OSB BIA insolvency proceeding observations for `geo=Quebec`

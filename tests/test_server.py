@@ -144,6 +144,36 @@ class ServerTests(unittest.TestCase):
             status, _ = self.request(path)
             self.assertEqual(status, expected, path)
 
+    def test_founder_profile_endpoint_resolves_industry_text_and_separates_layers(self):
+        path = "/insights/profile?geo=Quebec&industry=Electric%20vehicles&business_model_code=vehicle-manufacturing&employment_size=1%20to%204%20employees&limit=2"
+        first = self.request(path)
+        second = self.request(path)
+        self.assertEqual(first, second)
+        self.assertEqual(first[0], 200)
+        payload = json.loads(first[1])
+        self.assertEqual(payload["requested_profile"]["industry_code"], "electric-vehicles")
+        self.assertEqual([case["company_id"] for case in payload["narrative_cases"]], ["lion-electric", "taiga-motors"])
+        self.assertEqual({row["geo"] for row in payload["statistics_canada"]["rows"]}, {"Quebec"})
+        self.assertEqual({row["geo"] for row in payload["osb_insolvencies"]["rows"]}, {"Quebec"})
+        self.assertNotIn("score", payload)
+
+    def test_founder_profile_rejects_invalid_or_conflicting_filters(self):
+        for path, expected in (
+            ("/insights/profile?geo=Ontario&industry_code=electric-vehicles", 404),
+            ("/insights/profile?geo=Quebec", 400),
+            ("/insights/profile?geo=Quebec&industry_code=nope", 404),
+            ("/insights/profile?geo=Quebec&industry=Nope", 404),
+            ("/insights/profile?geo=Quebec&industry_code=electric-vehicles&industry=Retail", 400),
+            ("/insights/profile?geo=Quebec&industry_code=electric-vehicles&business_model_code=nope", 404),
+            ("/insights/profile?geo=Quebec&industry_code=electric-vehicles&employment_size=nope", 404),
+            ("/insights/profile?geo=Quebec&industry_code=electric-vehicles&limit=0", 400),
+            ("/insights/profile?geo=Quebec&industry_code=electric-vehicles&limit=101", 400),
+            ("/insights/profile?geo=Quebec&industry_code=electric-vehicles&geo=Canada", 400),
+            ("/insights/profile?geo=Quebec&industry_code=electric-vehicles&extra=value", 400),
+        ):
+            status, _ = self.request(path)
+            self.assertEqual(status, expected, path)
+
     def test_read_endpoints_and_unknown_route(self):
         for path in ("/health", "/companies", "/causes", "/geographies"):
             status, body = self.request(path)

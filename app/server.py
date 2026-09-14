@@ -18,7 +18,40 @@ AGGREGATE_PARAMS = {
     "/aggregate/comparison": {"geo", "period_start", "period_end", "limit"},
 }
 MAX_AGGREGATE_LIMIT = 500
+INSIGHT_PARAMS = {"geo", "industry_code", "industry", "business_model_code", "employment_size", "limit"}
+MAX_INSIGHT_LIMIT = 100
 PERIOD_PATTERN = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
+
+
+def founder_profile_query(database_path, query):
+    """Validate an exact, bounded founder profile before querying read-only layers."""
+    params = parse_qs(query, keep_blank_values=True)
+    if set(params).difference(INSIGHT_PARAMS) or any(len(values) != 1 or not values[0] for values in params.values()):
+        return 400, {"error": "invalid query parameters"}
+    if "geo" not in params or ("industry_code" not in params and "industry" not in params):
+        return 400, {"error": "geo and industry_code or industry are required"}
+    if params["geo"][0] not in {"Quebec", "Canada"}:
+        return 404, {"error": "geo not found"}
+    limit = 20
+    if "limit" in params:
+        try:
+            limit = int(params["limit"][0])
+        except ValueError:
+            return 400, {"error": "limit must be an integer"}
+        if not 1 <= limit <= MAX_INSIGHT_LIMIT:
+            return 400, {"error": f"limit must be between 1 and {MAX_INSIGHT_LIMIT}"}
+    profile = {key: params[key][0] for key in ("geo", "industry_code", "industry", "business_model_code", "employment_size") if key in params}
+    industry = intelligence.resolve_industry(database_path, profile.get("industry_code"), profile.get("industry"))
+    if industry is False:
+        return 400, {"error": "industry_code and industry conflict"}
+    if industry is None:
+        return 404, {"error": "industry not found"}
+    valid = intelligence.founder_filter_values(database_path)
+    if profile.get("business_model_code") is not None and profile["business_model_code"] not in {row["business_model_code"] for row in valid["business_models"]}:
+        return 404, {"error": "business_model_code not found"}
+    if profile.get("employment_size") is not None and profile["employment_size"] not in valid["employment_size"]:
+        return 404, {"error": "employment_size not found"}
+    return 200, intelligence.founder_profile_insight(database_path, profile, limit)
 
 
 def _valid_period(value):
@@ -104,6 +137,9 @@ def create_server(host, port, database_path):
             path = request.path
             if path in AGGREGATE_PARAMS:
                 status, payload = aggregate_query(database_path, path, request.query)
+                return self._json(status, payload)
+            if path == "/insights/profile":
+                status, payload = founder_profile_query(database_path, request.query)
                 return self._json(status, payload)
             if path == "/health":
                 return self._json(200, {"status": "ok"})

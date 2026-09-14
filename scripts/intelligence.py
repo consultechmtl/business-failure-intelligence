@@ -327,5 +327,129 @@ def cross_layer_comparison(database_path, geo, period_start=None, period_end=Non
         }
 
 
+FOUNDER_INSIGHT_CAVEATS = (
+    "Statistics Canada closures are business-dynamics observations, not necessarily permanent deaths, insolvencies, bankruptcies, or causes of business failure.",
+    "OSB BIA insolvency proceedings are not equivalent to all business failures or permanent closure and are not Statistics Canada closure observations.",
+    "Narrative cases are a small, non-representative, evidence-constrained corpus; their warning signs and cause assertions do not estimate prevalence or establish causation.",
+    "This response co-presents separate layers only: it does not join, sum, normalize, score, predict, rank, or calculate rates across them.",
+    "Statistics Canada NAICS categories are not equated with the normalized narrative industry taxonomy; industry and business-model filters apply only to narrative matching.",
+)
+
+
+def founder_filter_values(database_path):
+    """Return normalized profile dimensions and compatible aggregate dimensions."""
+    with _connect(database_path) as connection:
+        return {
+            "geo": ("Quebec", "Canada"),
+            "industries": _rows(connection, "SELECT industry_code, label_en, label_fr FROM industries ORDER BY industry_code"),
+            "business_models": _rows(connection, "SELECT business_model_code, label_en, label_fr FROM business_models ORDER BY business_model_code"),
+            "employment_size": [row[0] for row in connection.execute(
+                "SELECT DISTINCT employment_size FROM aggregate_observations ORDER BY employment_size"
+            )],
+        }
+
+
+def resolve_industry(database_path, industry_code=None, industry=None):
+    """Resolve a normalized industry code or case-insensitive label without fuzzy inference."""
+    with _connect(database_path) as connection:
+        if industry_code is not None:
+            row = connection.execute(
+                "SELECT industry_code, label_en, label_fr FROM industries WHERE industry_code = ?", (industry_code,)
+            ).fetchone()
+            if row is None:
+                return None
+            if industry is not None and industry.casefold() not in {row["industry_code"].casefold(), row["label_en"].casefold(), row["label_fr"].casefold()}:
+                return False
+            return dict(row)
+        if industry is None:
+            return None
+        row = connection.execute("""
+            SELECT industry_code, label_en, label_fr FROM industries
+            WHERE lower(industry_code) = lower(?) OR lower(label_en) = lower(?) OR lower(label_fr) = lower(?)
+        """, (industry, industry, industry)).fetchone()
+        return dict(row) if row is not None else None
+
+
+def _profile_geography_clause(geo):
+    return ("c.country_code = 'CA'", ()) if geo == "Canada" else ("c.country_code = 'CA' AND c.region_code = 'QC'", ())
+
+
+def founder_profile_insight(database_path, profile, limit=20):
+    """Co-present compatible aggregate context and exact normalized narrative matches; never score or merge layers."""
+    geo = profile["geo"]
+    industry = resolve_industry(database_path, profile.get("industry_code"), profile.get("industry"))
+    if not industry:
+        raise ValueError("industry must resolve before querying")
+    model_code = profile.get("business_model_code")
+    employment_size = profile.get("employment_size")
+    geo_clause, geo_parameters = _profile_geography_clause(geo)
+    with _connect(database_path) as connection:
+        requested = {"geo": geo, "industry_code": industry["industry_code"], "industry": industry["label_en"]}
+        if model_code is not None:
+            requested["business_model_code"] = model_code
+        if employment_size is not None:
+            requested["employment_size"] = employment_size
+        model_clause, model_parameters = (" AND c.business_model_code = ?", (model_code,)) if model_code else ("", ())
+        cases = _rows(connection, f"""
+            SELECT c.company_id, c.canonical_name, c.industry_code, c.business_model_code, c.geography_code,
+                   c.country_code, c.region_code, c.city, c.description
+            FROM companies AS c
+            WHERE c.industry_code = ? AND {geo_clause}{model_clause}
+            ORDER BY c.canonical_name COLLATE NOCASE, c.company_id
+            LIMIT ?
+        """, (industry["industry_code"],) + geo_parameters + model_parameters + (limit,))
+        case_ids = [case["company_id"] for case in cases]
+        if case_ids:
+            placeholders = ",".join("?" for _ in case_ids)
+            warnings = _rows(connection, f"""
+                SELECT w.company_id, c.canonical_name, w.warning_id, w.signal_code, w.observed_text,
+                       w.observed_date, w.confidence, s.source_id, s.source_url, s.title AS source_title,
+                       s.source_type, s.evidence_quality
+                FROM warning_signs AS w JOIN companies AS c ON c.company_id = w.company_id
+                LEFT JOIN sources AS s ON s.source_id = w.source_id
+                WHERE w.company_id IN ({placeholders})
+                ORDER BY c.canonical_name COLLATE NOCASE, w.observed_date IS NULL, w.observed_date, w.warning_id
+            """, case_ids)
+            causes = _rows(connection, f"""
+                SELECT ca.company_id, c.canonical_name, ca.assertion_id, ca.cause_code, fc.label AS cause_label,
+                       ca.assertion_type, ca.confidence, ca.evidence_quote, ca.analyst_note,
+                       s.source_id, s.source_url, s.title AS source_title, s.source_type, s.evidence_quality
+                FROM cause_assertions AS ca JOIN companies AS c ON c.company_id = ca.company_id
+                JOIN failure_causes AS fc ON fc.cause_code = ca.cause_code
+                JOIN sources AS s ON s.source_id = ca.source_id
+                WHERE ca.company_id IN ({placeholders})
+                ORDER BY c.canonical_name COLLATE NOCASE,
+                         CASE ca.confidence WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END,
+                         ca.assertion_id
+            """, case_ids)
+        else:
+            warnings, causes = [], []
+        statcan_filters = {"geo": geo, "employment_size": employment_size, "business_dynamics": None}
+        statcan = _aggregate_rows(
+            database_path, "o.reference_period, o.naics, o.business_dynamics, o.table_number", statcan_filters, limit
+        )
+        osb = aggregate_insolvencies(database_path, geo=geo, limit=limit)
+        return {
+            "requested_profile": requested,
+            "statistics_canada": {
+                "label": "Statistics Canada business-dynamics observations (compatible geography and employment-size dimensions only)",
+                "filters": statcan["filters"], "rows": statcan["rows"], "metadata": statcan["metadata"],
+            },
+            "osb_insolvencies": {
+                "label": "OSB BIA insolvency proceeding observations (separate context; geography only)",
+                "filters": osb["filters"], "rows": osb["rows"], "metadata": osb["metadata"],
+            },
+            "narrative_cases": cases,
+            "warning_signs": warnings,
+            "causes": causes,
+            "provenance": {
+                "narrative_matching": "Exact normalized industry/business-model codes and Canadian geography fields from reviewed company records.",
+                "statistics_canada": statcan["metadata"]["datasets"],
+                "osb_insolvencies": osb["metadata"]["datasets"],
+            },
+            "caveats": list(FOUNDER_INSIGHT_CAVEATS),
+        }
+
+
 def to_json(value):
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))

@@ -96,6 +96,32 @@ class IntelligenceTests(unittest.TestCase):
         self.assertEqual(first["statistics_canada"]["period_coverage"], {"first": "2026-01", "last": "2026-03", "count": 3})
         self.assertEqual(first["osb_insolvencies"]["period_coverage"], {"first": "2026-01", "last": "2026-03", "count": 3})
 
+    def test_founder_profile_matches_normalized_cases_and_keeps_layers_separate(self):
+        payload = intelligence.founder_profile_insight(
+            self.db_path,
+            {"geo": "Quebec", "industry_code": "electric-vehicles", "business_model_code": "vehicle-manufacturing", "employment_size": "1 to 4 employees"},
+            limit=10,
+        )
+        self.assertEqual(payload["requested_profile"]["industry_code"], "electric-vehicles")
+        self.assertEqual([case["company_id"] for case in payload["narrative_cases"]], ["lion-electric", "taiga-motors"])
+        self.assertEqual({row["geo"] for row in payload["statistics_canada"]["rows"]}, {"Quebec"})
+        self.assertEqual({row["employment_size"] for row in payload["statistics_canada"]["rows"]}, {"1 to 4 employees"})
+        self.assertEqual({row["geo"] for row in payload["osb_insolvencies"]["rows"]}, {"Quebec"})
+        self.assertNotIn("industry_code", payload["statistics_canada"]["filters"])
+        self.assertNotIn("business_model_code", payload["osb_insolvencies"]["filters"])
+        self.assertNotIn("score", payload)
+        self.assertIn("not equivalent", " ".join(payload["caveats"]))
+
+    def test_founder_profile_geography_and_model_filters_are_deterministic(self):
+        profile = {"geo": "Quebec", "industry_code": "apparel-retail", "business_model_code": "specialty-retail"}
+        first = intelligence.founder_profile_insight(self.db_path, profile, limit=10)
+        second = intelligence.founder_profile_insight(self.db_path, profile, limit=10)
+        self.assertEqual(first, second)
+        self.assertEqual([case["company_id"] for case in first["narrative_cases"]], ["le-chateau"])
+        self.assertEqual(first["warning_signs"], [])  # No evidence is not fabricated as a signal.
+        self.assertEqual(first["causes"], [])  # No evidence is not fabricated as a cause.
+        self.assertIn("non-representative", " ".join(first["caveats"]))
+
     def test_json_serialization_is_deterministic(self):
         payload = intelligence.to_json(intelligence.corpus_summary(self.db_path))
         self.assertEqual(payload, intelligence.to_json(intelligence.corpus_summary(self.db_path)))
