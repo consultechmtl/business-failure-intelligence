@@ -2,6 +2,7 @@
 """Minimal standard-library JSON API for the curated failure corpus."""
 
 import argparse
+import re
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -14,8 +15,14 @@ AGGREGATE_PARAMS = {
     "/aggregate/by-size": {"geo", "dynamics", "limit"},
     "/aggregate/by-industry": {"geo", "dynamics", "employment_size", "limit"},
     "/aggregate/insolvencies": {"geo", "period", "type", "limit"},
+    "/aggregate/comparison": {"geo", "period_start", "period_end", "limit"},
 }
 MAX_AGGREGATE_LIMIT = 500
+PERIOD_PATTERN = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
+
+
+def _valid_period(value):
+    return bool(PERIOD_PATTERN.fullmatch(value))
 
 
 def aggregate_query(database_path, path, query):
@@ -32,6 +39,19 @@ def aggregate_query(database_path, path, query):
             return 400, {"error": "limit must be an integer"}
         if not 1 <= limit <= MAX_AGGREGATE_LIMIT:
             return 400, {"error": f"limit must be between 1 and {MAX_AGGREGATE_LIMIT}"}
+    if path == "/aggregate/comparison":
+        filters = {name: params.get(name, [None])[0] for name in ("geo", "period_start", "period_end")}
+        if filters["geo"] is None:
+            return 400, {"error": "geo is required"}
+        if filters["geo"] not in {"Quebec", "Canada"}:
+            return 404, {"error": "geo not found"}
+        if any(value is not None and not _valid_period(value) for name, value in filters.items() if name != "geo"):
+            return 400, {"error": "period_start and period_end must use YYYY-MM"}
+        if filters["period_start"] and filters["period_end"] and filters["period_start"] > filters["period_end"]:
+            return 400, {"error": "period_start must be before or equal to period_end"}
+        return 200, intelligence.cross_layer_comparison(
+            database_path, filters["geo"], filters["period_start"], filters["period_end"], limit
+        )
     if path == "/aggregate/insolvencies":
         filters = {name: params.get(name, [None])[0] for name in ("geo", "period", "type")}
         valid = intelligence.insolvency_filter_values(database_path)

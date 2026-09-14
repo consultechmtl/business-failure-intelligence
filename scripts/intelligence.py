@@ -245,5 +245,87 @@ def aggregate_insolvencies(database_path, geo=None, period=None, insolvency_type
                 "interpretation_disclaimer": OSB_INSOLVENCY_DISCLAIMER}}
 
 
+COMPARISON_SAFE_LANGUAGE_WARNINGS = (
+    "Statistics Canada openings and closures and OSB BIA insolvency proceedings are separately reported observation layers with incompatible definitions, populations, and measurement processes.",
+    "OSB insolvency proceedings are not equivalent to Statistics Canada closures, permanent business closure, business failure, bankruptcy totals, or narrative company outcomes.",
+    "This comparison is descriptive only: it makes no causal interpretation and does not estimate a failure rate, insolvency rate, or closure rate.",
+    "Do not divide insolvencies by closures or treat either layer as the denominator for the other unless an explicit, separately documented analytical request defines and justifies that calculation.",
+)
+
+
+def _period_coverage(connection, table, where, parameters):
+    first, last, count = connection.execute(
+        f"SELECT MIN(reference_period), MAX(reference_period), COUNT(DISTINCT reference_period) FROM {table} WHERE {where}",
+        parameters,
+    ).fetchone()
+    return {"first": first, "last": last, "count": count}
+
+
+def _comparison_dataset_provenance(connection, dataset_id, source_tables):
+    datasets = _rows(connection, """
+        SELECT table_number, title, publisher, source_url, retrieval_date, definition_notes, extraction_criteria
+        FROM datasets WHERE dataset_id = ? ORDER BY table_number
+    """, (dataset_id,)) if dataset_id else _rows(connection, """
+        SELECT table_number, title, publisher, source_url, retrieval_date, definition_notes, extraction_criteria
+        FROM datasets WHERE dataset_id IN ('statcan-33100270', 'statcan-33100722') ORDER BY table_number
+    """)
+    return {"source_tables": source_tables, "datasets": datasets}
+
+
+def cross_layer_comparison(database_path, geo, period_start=None, period_end=None, limit=500):
+    """Return co-presented source observations without merging layers or calculating rates."""
+    statcan_clauses = ["geo = ?", "reference_period >= ?", "reference_period <= ?"]
+    osb_clauses = ["geo = ?", "reference_period >= ?", "reference_period <= ?"]
+    start = period_start or "0000-00"
+    end = period_end or "9999-99"
+    parameters = (geo, start, end)
+    statcan_where = " AND ".join(statcan_clauses)
+    osb_where = " AND ".join(osb_clauses)
+    with _connect(database_path) as connection:
+        def statcan_rows_for(dynamics):
+            return _rows(connection, f"""
+                SELECT reference_period, geo, naics, employment_size, business_dynamics, uom, value,
+                       COALESCE(NULLIF(status, ''), 'none') AS status_flag, table_number, source_url, retrieval_date
+                FROM aggregate_observations WHERE {statcan_where} AND business_dynamics = ?
+                ORDER BY reference_period, geo, naics, employment_size, table_number, aggregate_observation_id
+                LIMIT ?
+            """, parameters + (dynamics, limit))
+
+        openings = statcan_rows_for("Openings")
+        closures = statcan_rows_for("Closures")
+        osb_rows = _rows(connection, f"""
+            SELECT reference_period, geo, geo_level, debtor_type, business_form, insolvency_type,
+                   naics, measure, uom, value, COALESCE(NULLIF(status, ''), 'none') AS status_flag,
+                   source_url, retrieval_date
+            FROM osb_insolvency_observations WHERE {osb_where}
+            ORDER BY reference_period, geo, debtor_type, business_form, naics, insolvency_type, osb_insolvency_observation_id
+            LIMIT ?
+        """, parameters + (limit,))
+        return {
+            "filters": {key: value for key, value in {"geo": geo, "period_start": period_start, "period_end": period_end}.items() if value is not None},
+            "statistics_canada": {
+                "label": "Statistics Canada business-dynamics observations",
+                "openings": openings,
+                "closures": closures,
+                "period_coverage": _period_coverage(connection, "aggregate_observations", statcan_where, parameters),
+                "units": [row[0] for row in connection.execute(f"SELECT DISTINCT uom FROM aggregate_observations WHERE {statcan_where} ORDER BY uom", parameters)],
+                "provenance": _comparison_dataset_provenance(connection, None, ["33-10-0270-01", "33-10-0722-01"]),
+            },
+            "osb_insolvencies": {
+                "label": "OSB BIA insolvency proceeding observations",
+                "rows": osb_rows,
+                "period_coverage": _period_coverage(connection, "osb_insolvency_observations", osb_where, parameters),
+                "units": [row[0] for row in connection.execute(f"SELECT DISTINCT uom FROM osb_insolvency_observations WHERE {osb_where} ORDER BY uom", parameters)],
+                "provenance": _comparison_dataset_provenance(connection, "osb-bia-insolvency-statistics-2026-03", ["OSB BIA insolvency statistics workbook"]),
+            },
+            "metadata": {
+                "comparison_method": "Co-presentation only; no rows are joined, summed, normalized, or used as each other's denominator.",
+                "incompatible_definitions": True,
+                "causal_interpretation": "none",
+                "safe_language_warnings": list(COMPARISON_SAFE_LANGUAGE_WARNINGS),
+            },
+        }
+
+
 def to_json(value):
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))

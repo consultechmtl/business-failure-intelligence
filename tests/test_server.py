@@ -105,6 +105,32 @@ class ServerTests(unittest.TestCase):
         status, _ = self.request("/aggregate/insolvencies?type=Nope")
         self.assertEqual(status, 404)
 
+    def test_cross_layer_comparison_returns_separate_layers_deterministically(self):
+        path = "/aggregate/comparison?geo=Quebec&period_start=2026-01&period_end=2026-03&limit=2"
+        first = self.request(path)
+        second = self.request(path)
+        self.assertEqual(first, second)
+        self.assertEqual(first[0], 200)
+        payload = json.loads(first[1])
+        self.assertEqual(payload["statistics_canada"]["label"], "Statistics Canada business-dynamics observations")
+        self.assertEqual(payload["osb_insolvencies"]["label"], "OSB BIA insolvency proceeding observations")
+        self.assertEqual({row["business_dynamics"] for row in payload["statistics_canada"]["openings"]}, {"Openings"})
+        self.assertEqual({row["business_dynamics"] for row in payload["statistics_canada"]["closures"]}, {"Closures"})
+        self.assertNotIn("rate", payload)
+        self.assertIn("no causal interpretation", " ".join(payload["metadata"]["safe_language_warnings"]))
+
+    def test_cross_layer_comparison_rejects_invalid_geo_dates_and_limit(self):
+        for path, expected in (
+            ("/aggregate/comparison?geo=Ontario", 404),
+            ("/aggregate/comparison?geo=Quebec&period_start=2026-13", 400),
+            ("/aggregate/comparison?geo=Quebec&period_end=2026-00", 400),
+            ("/aggregate/comparison?geo=Quebec&period_start=2026-04&period_end=2026-03", 400),
+            ("/aggregate/comparison?geo=Quebec&limit=0", 400),
+            ("/aggregate/comparison?geo=Quebec&limit=501", 400),
+        ):
+            status, _ = self.request(path)
+            self.assertEqual(status, expected, path)
+
     def test_aggregate_rejects_invalid_or_unbounded_parameters(self):
         for path, expected in (
             ("/aggregate/trends?geo=Ontario", 404),

@@ -70,6 +70,32 @@ class IntelligenceTests(unittest.TestCase):
         self.assertEqual(summary["uom"], ["Number"])
         self.assertIn("not necessarily permanent deaths", summary["interpretation_disclaimer"])
 
+    def test_cross_layer_comparison_keeps_quebec_statcan_and_osb_layers_separate(self):
+        payload = intelligence.cross_layer_comparison(
+            self.db_path, geo="Quebec", period_start="2026-01", period_end="2026-03", limit=3
+        )
+        self.assertEqual(payload["filters"], {"geo": "Quebec", "period_start": "2026-01", "period_end": "2026-03"})
+        self.assertEqual(payload["statistics_canada"]["label"], "Statistics Canada business-dynamics observations")
+        self.assertEqual(payload["osb_insolvencies"]["label"], "OSB BIA insolvency proceeding observations")
+        self.assertEqual({row["business_dynamics"] for row in payload["statistics_canada"]["openings"]}, {"Openings"})
+        self.assertEqual({row["business_dynamics"] for row in payload["statistics_canada"]["closures"]}, {"Closures"})
+        self.assertEqual({row["geo"] for row in payload["statistics_canada"]["openings"]}, {"Quebec"})
+        self.assertEqual({row["geo"] for row in payload["osb_insolvencies"]["rows"]}, {"Quebec"})
+        self.assertNotIn("rate", payload)
+        self.assertNotIn("ratio", payload)
+        self.assertIn("not equivalent", payload["metadata"]["safe_language_warnings"][1])
+        self.assertEqual(payload["statistics_canada"]["provenance"]["source_tables"], ["33-10-0270-01", "33-10-0722-01"])
+        self.assertEqual(payload["osb_insolvencies"]["provenance"]["source_tables"], ["OSB BIA insolvency statistics workbook"])
+
+    def test_cross_layer_comparison_supports_canada_and_is_deterministic(self):
+        first = intelligence.cross_layer_comparison(self.db_path, geo="Canada", period_start="2026-01", period_end="2026-03", limit=2)
+        second = intelligence.cross_layer_comparison(self.db_path, geo="Canada", period_start="2026-01", period_end="2026-03", limit=2)
+        self.assertEqual(first, second)
+        self.assertEqual({row["geo"] for row in first["statistics_canada"]["closures"]}, {"Canada"})
+        self.assertEqual({row["geo"] for row in first["osb_insolvencies"]["rows"]}, {"Canada"})
+        self.assertEqual(first["statistics_canada"]["period_coverage"], {"first": "2026-01", "last": "2026-03", "count": 3})
+        self.assertEqual(first["osb_insolvencies"]["period_coverage"], {"first": "2026-01", "last": "2026-03", "count": 3})
+
     def test_json_serialization_is_deterministic(self):
         payload = intelligence.to_json(intelligence.corpus_summary(self.db_path))
         self.assertEqual(payload, intelligence.to_json(intelligence.corpus_summary(self.db_path)))

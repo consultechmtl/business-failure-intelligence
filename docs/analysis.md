@@ -74,7 +74,24 @@ curl http://127.0.0.1:8000/aggregate/summary
 curl 'http://127.0.0.1:8000/aggregate/trends?geo=Quebec&dynamics=Closures'
 curl 'http://127.0.0.1:8000/aggregate/by-size?geo=Quebec'
 curl 'http://127.0.0.1:8000/aggregate/by-industry?geo=Quebec&employment_size=1%20to%204%20employees'
+curl 'http://127.0.0.1:8000/aggregate/comparison?geo=Canada&period_start=2026-01&period_end=2026-03'
 ```
+
+### Cross-layer comparison
+
+`/aggregate/comparison` is a co-presentation endpoint, not a harmonized
+failure-rate dataset. It requires `geo=Quebec` or `geo=Canada` and accepts
+optional inclusive `period_start`/`period_end` values in `YYYY-MM`. The response
+keeps three result collections separate: Statistics Canada `openings`,
+Statistics Canada `closures`, and OSB `osb_insolvencies.rows`. Each layer has
+independent dataset provenance, source tables, period coverage, and units.
+
+The endpoint does not join, sum, normalize, compare as a common denominator, or
+divide OSB insolvencies by Statistics Canada closures. OSB BIA proceedings and
+Statistics Canada business-dynamics closures have incompatible definitions,
+populations, and measurement processes. The response explicitly makes no causal
+interpretation; it cannot show that an opening, closure, or insolvency caused
+another observation or a narrative-company outcome.
 
 `geo`, `dynamics`, and `employment_size` are validated against values stored in
 the loaded aggregate data. An invalid value returns `404`; unsupported,

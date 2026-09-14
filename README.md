@@ -98,21 +98,34 @@ curl 'http://127.0.0.1:8000/aggregate/trends?geo=Quebec&dynamics=Closures'
 curl 'http://127.0.0.1:8000/aggregate/by-size?geo=Quebec'
 curl 'http://127.0.0.1:8000/aggregate/by-industry?geo=Quebec&employment_size=1%20to%204%20employees'
 curl 'http://127.0.0.1:8000/aggregate/insolvencies?geo=Quebec&period=2026-03&type=Bankruptcy'
+curl 'http://127.0.0.1:8000/aggregate/comparison?geo=Quebec&period_start=2026-01&period_end=2026-03&limit=50'
 ```
+
+`/aggregate/comparison` co-presents separately labeled Statistics Canada
+openings/closures and OSB BIA insolvency proceeding observations for `geo=Quebec`
+or `geo=Canada`. Each layer has its own provenance, source table(s), period
+coverage, and units. It never joins, sums, normalizes, or calculates a rate from
+the two layers; insolvencies are never divided by closures unless a future,
+explicitly documented analytical request defines and justifies that operation.
+The response includes incompatible-definition, no-causal-interpretation, and
+safe-language warnings.
 
 All aggregate responses include source dataset/table provenance, source URL and
 retrieval date, available reference-period coverage, UOM, status flags, and the
 Statistics Canada interpretation disclaimer. Query parameters are allow-listed;
 unknown `geo`, `dynamics`, or `employment_size` values return `404`, while
-malformed, duplicate, or out-of-range query parameters return `400`. `limit` is
-optional and bounded to 1–500 (default 500).
+malformed, duplicate, or out-of-range query parameters return `400`. The
+comparison endpoint requires `geo`, accepts optional `period_start` and
+`period_end` in `YYYY-MM`, and returns `400` for invalid or reversed dates.
+`limit` is optional and bounded to 1–500 (default 500).
 
 Use safe language: call values **Statistics Canada business-dynamics
-observations** or **published closures/openings**, not business deaths, failures,
-insolvencies, bankruptcies, or causal findings. In particular, a Statistics
-Canada closure is not necessarily a permanent enterprise death, an insolvency,
-or evidence of why a business failed. Aggregate observations remain separate
-from narrative company cases.
+observations**, **published openings/closures**, or **OSB BIA insolvency
+proceeding observations**, not business deaths, failures, insolvencies,
+bankruptcies, or causal findings. In particular, a Statistics Canada closure is
+not necessarily a permanent enterprise death, an insolvency, or evidence of why
+a business failed. Aggregate observations remain separate from narrative company
+cases and from each other.
 
 ## License
 
