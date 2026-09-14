@@ -26,6 +26,7 @@ AGGREGATE_TABLES = {
     "outcome_definitions": ("outcome_definitions.csv", ["outcome_definition_id", "dataset_id", "label", "definition_text"]),
 }
 AGGREGATE_OBSERVATIONS = ("aggregate_observations.csv", ["aggregate_observation_id", "dataset_id", "sample_frame_id", "observation_unit_id", "outcome_definition_id", "reference_period", "geo", "naics", "employment_size", "business_dynamics", "uom", "value", "status", "table_number", "source_url", "retrieval_date"])
+OSB_INSOLVENCIES = ("osb_insolvency_observations.csv", ["osb_insolvency_observation_id", "dataset_id", "reference_period", "geo", "geo_level", "debtor_type", "business_form", "insolvency_type", "naics", "measure", "uom", "value", "status", "source_url", "retrieval_date"])
 OUTCOME_TYPES = {"shutdown", "bankruptcy", "insolvency", "distress", "acquisition", "asset_sale", "pivot", "dormant", "unknown"}
 CONFIDENCES = {"high", "medium", "low"}
 ASSERTION_TYPES = {"explicit_founder_statement", "court_or_regulatory_finding", "contemporaneous_reporting", "editorial_classification", "analyst_inference"}
@@ -76,11 +77,14 @@ def validate(data_dir, taxonomy_path):
     rows["aggregate_observations"] = read_table(data_dir, aggregate_filename, aggregate_columns, errors) if aggregate_enabled else []
     if aggregate_enabled and not (data_dir / aggregate_filename).exists():
         errors.append(f"{aggregate_filename}: file is required when datasets.csv is present")
+    osb_filename, osb_columns = OSB_INSOLVENCIES
+    rows["osb_insolvency_observations"] = read_table(data_dir, osb_filename, osb_columns, errors) if (data_dir / osb_filename).exists() else []
     ids = {
         table: unique_ids(rows[table], filename, columns[0], errors)
         for table, (filename, columns) in AGGREGATE_TABLES.items()
     }
     ids["aggregate_observations"] = unique_ids(rows["aggregate_observations"], aggregate_filename, "aggregate_observation_id", errors)
+    ids["osb_insolvency_observations"] = unique_ids(rows["osb_insolvency_observations"], osb_filename, "osb_insolvency_observation_id", errors)
     ids.update({
         "companies": unique_ids(rows["companies"], "companies.csv", "company_id", errors),
         "industries": unique_ids(rows["industries"], "industries.csv", "industry_code", errors),
@@ -100,6 +104,17 @@ def validate(data_dir, taxonomy_path):
         for line_number, row in enumerate(rows[table], start=2):
             if row["dataset_id"].strip() not in ids["datasets"]:
                 errors.append(f"{table}.csv: row {line_number}: unknown dataset_id: {row['dataset_id']}")
+    for line_number, row in enumerate(rows["osb_insolvency_observations"], start=2):
+        if row["dataset_id"].strip() not in ids["datasets"]:
+            errors.append(f"{osb_filename}: row {line_number}: unknown dataset_id: {row['dataset_id']}")
+        if row["debtor_type"].strip() not in {"all", "business", "consumer"}:
+            errors.append(f"{osb_filename}: row {line_number}: invalid debtor_type")
+        if row["insolvency_type"].strip() not in {"Total", "Bankruptcy", "Proposal"}:
+            errors.append(f"{osb_filename}: row {line_number}: invalid insolvency_type")
+        try:
+            float(row["value"])
+        except ValueError:
+            errors.append(f"{osb_filename}: row {line_number}: value must be numeric")
     for line_number, row in enumerate(rows["aggregate_observations"], start=2):
         for column, table in (("dataset_id", "datasets"), ("sample_frame_id", "sample_frames"), ("observation_unit_id", "observation_units"), ("outcome_definition_id", "outcome_definitions")):
             if row[column].strip() not in ids[table]:

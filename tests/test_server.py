@@ -93,6 +93,18 @@ class ServerTests(unittest.TestCase):
         self.assertEqual({row["geo"] for row in industry_rows}, {"Quebec"})
         self.assertEqual({row["employment_size"] for row in industry_rows}, {"1 to 4 employees"})
 
+    def test_osb_insolvencies_endpoint_filters_and_disclaims_non_equivalence(self):
+        status, body = self.request("/aggregate/insolvencies?geo=Quebec&period=2026-03&type=Bankruptcy")
+        self.assertEqual(status, 200)
+        payload = json.loads(body)
+        self.assertTrue(payload["rows"])
+        self.assertEqual({row["geo"] for row in payload["rows"]}, {"Quebec"})
+        self.assertEqual({row["reference_period"] for row in payload["rows"]}, {"2026-03"})
+        self.assertEqual({row["insolvency_type"] for row in payload["rows"]}, {"Bankruptcy"})
+        self.assertIn("not equivalent to all business failures or permanent closure", payload["metadata"]["interpretation_disclaimer"])
+        status, _ = self.request("/aggregate/insolvencies?type=Nope")
+        self.assertEqual(status, 404)
+
     def test_aggregate_rejects_invalid_or_unbounded_parameters(self):
         for path, expected in (
             ("/aggregate/trends?geo=Ontario", 404),

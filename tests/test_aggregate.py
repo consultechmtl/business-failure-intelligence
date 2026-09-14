@@ -102,5 +102,48 @@ class AggregateLayerTests(unittest.TestCase):
         self.assertIn("Closures", result.stdout)
 
 
+class OsbInsolvencyTests(unittest.TestCase):
+    def test_osb_normalizer_preserves_business_type_and_naics_dimensions(self):
+        from normalize_osb_insolvencies import normalize_sheet
+
+        rows = [
+            ["BIA Insolvencies Filed by Businesses/Dossiers", "", ""],
+            ["", "jan/janv", "mar"],
+            ["Quebec/Québec", "10", "12"],
+            ["Bankruptcies/Faillites", "3", "4"],
+            ["Proposals/Propositions", "7", "8"],
+            ["BIA Insolvencies by NAICS Sectors/Dossiers", "", ""],
+            ["", "jan/janv", "mar"],
+            ["Construction", "5", "6"],
+            ["Bankruptcies/Faillites", "1", "2"],
+            ["Proposals/Propositions", "4", "4"],
+        ]
+        normalized = normalize_sheet(rows, 2026, "https://example.test/workbook.xlsx", "2026-09-14")
+        self.assertEqual(len(normalized), 8)
+        business = [row for row in normalized if row["geo"] == "Quebec" and row["insolvency_type"] == "Bankruptcy"]
+        self.assertEqual(business[0]["debtor_type"], "business")
+        self.assertEqual(business[0]["business_form"], "all_businesses")
+        self.assertEqual(business[0]["reference_period"], "2026-01")
+        naics = [row for row in normalized if row["naics"] == "Construction" and row["insolvency_type"] == "Proposal"]
+        self.assertEqual(naics[0]["geo"], "Canada")
+        self.assertEqual(naics[0]["value"], "4")
+
+    def test_loader_keeps_osb_observations_separate_from_statcan_and_companies(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            data_dir = root / "curated"
+            data_dir.mkdir()
+            for source in (REPO_ROOT / "data" / "curated").glob("*.csv"):
+                (data_dir / source.name).write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+            database = root / "insolvencies.sqlite"
+            result = subprocess.run([sys.executable, "scripts/load_sqlite.py", "--db", str(database), "--data-dir", str(data_dir)], cwd=REPO_ROOT, text=True, capture_output=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            with sqlite3.connect(database) as connection:
+                self.assertGreater(connection.execute("SELECT COUNT(*) FROM osb_insolvency_observations").fetchone()[0], 0)
+                columns = {row[1] for row in connection.execute("PRAGMA table_info(osb_insolvency_observations)")}
+                self.assertNotIn("company_id", columns)
+                self.assertEqual(connection.execute("PRAGMA foreign_key_check").fetchall(), [])
+
+
 if __name__ == "__main__":
     unittest.main()

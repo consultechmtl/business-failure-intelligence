@@ -13,6 +13,7 @@ AGGREGATE_PARAMS = {
     "/aggregate/trends": {"geo", "dynamics", "limit"},
     "/aggregate/by-size": {"geo", "dynamics", "limit"},
     "/aggregate/by-industry": {"geo", "dynamics", "employment_size", "limit"},
+    "/aggregate/insolvencies": {"geo", "period", "type", "limit"},
 }
 MAX_AGGREGATE_LIMIT = 500
 
@@ -31,6 +32,13 @@ def aggregate_query(database_path, path, query):
             return 400, {"error": "limit must be an integer"}
         if not 1 <= limit <= MAX_AGGREGATE_LIMIT:
             return 400, {"error": f"limit must be between 1 and {MAX_AGGREGATE_LIMIT}"}
+    if path == "/aggregate/insolvencies":
+        filters = {name: params.get(name, [None])[0] for name in ("geo", "period", "type")}
+        valid = intelligence.insolvency_filter_values(database_path)
+        for name, value in filters.items():
+            if value is not None and value not in valid[name]:
+                return 404, {"error": f"{name} not found"}
+        return 200, intelligence.aggregate_insolvencies(database_path, filters["geo"], filters["period"], filters["type"], limit)
     filters = {name: params.get(name, [None])[0] for name in ("geo", "dynamics", "employment_size")}
     valid = intelligence.aggregate_filter_values(database_path)
     for name, value in filters.items():

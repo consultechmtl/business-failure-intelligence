@@ -7,7 +7,7 @@ import sqlite3
 import sys
 from pathlib import Path
 
-from validate_data import AGGREGATE_OBSERVATIONS, AGGREGATE_TABLES, TABLES, validate
+from validate_data import AGGREGATE_OBSERVATIONS, AGGREGATE_TABLES, OSB_INSOLVENCIES, TABLES, validate
 
 
 LOAD_ORDER = ("industries", "business_models", "geographies", "companies", "entity_aliases", "outcomes", "sources", "cause_assertions", "lessons")
@@ -58,6 +58,11 @@ def load(database_path, data_dir, taxonomy_path, schema_path):
         for table in AGGREGATE_LOAD_ORDER:
             _, columns = table_spec(table)
             counts[table] = insert_rows(connection, table, columns, aggregate_rows[table])
+        osb_filename, osb_columns = OSB_INSOLVENCIES
+        osb_path = data_dir / osb_filename
+        counts["osb_insolvency_observations"] = insert_rows(
+            connection, "osb_insolvency_observations", osb_columns, read_rows(osb_path) if osb_path.exists() else []
+        )
     return counts
 
 

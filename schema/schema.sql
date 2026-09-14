@@ -182,3 +182,25 @@ CREATE TABLE IF NOT EXISTS aggregate_observations (
 
 CREATE INDEX IF NOT EXISTS idx_aggregate_observations_comparison
   ON aggregate_observations(dataset_id, reference_period, geo, employment_size, business_dynamics);
+
+-- OSB insolvency proceedings are a distinct official outcome layer, never company-linked.
+CREATE TABLE IF NOT EXISTS osb_insolvency_observations (
+  osb_insolvency_observation_id TEXT PRIMARY KEY,
+  dataset_id TEXT NOT NULL REFERENCES datasets(dataset_id),
+  reference_period TEXT NOT NULL,
+  geo TEXT NOT NULL,
+  geo_level TEXT NOT NULL,
+  debtor_type TEXT NOT NULL CHECK (debtor_type IN ('all','business','consumer')),
+  business_form TEXT NOT NULL,
+  insolvency_type TEXT NOT NULL CHECK (insolvency_type IN ('Total','Bankruptcy','Proposal')),
+  naics TEXT NOT NULL,
+  measure TEXT NOT NULL,
+  uom TEXT NOT NULL,
+  value REAL NOT NULL,
+  status TEXT,
+  source_url TEXT NOT NULL,
+  retrieval_date TEXT NOT NULL,
+  UNIQUE(dataset_id, reference_period, geo, geo_level, debtor_type, business_form, insolvency_type, naics, measure)
+);
+CREATE INDEX IF NOT EXISTS idx_osb_insolvencies_query
+  ON osb_insolvency_observations(reference_period, geo, debtor_type, insolvency_type);

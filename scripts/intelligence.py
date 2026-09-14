@@ -120,7 +120,9 @@ def _aggregate_metadata(connection, where="", parameters=()):
         "datasets": _rows(connection, """
             SELECT table_number, title, publisher, source_url, retrieval_date,
                    definition_notes, extraction_criteria
-            FROM datasets ORDER BY table_number
+            FROM datasets
+            WHERE dataset_id IN (SELECT DISTINCT dataset_id FROM aggregate_observations)
+            ORDER BY table_number
         """),
         "reference_periods": {"first": period[0], "last": period[1], "count": period[2]},
         "uom": [row[0] for row in connection.execute(
@@ -198,6 +200,49 @@ def aggregate_by_size(database_path, geo=None, dynamics=None, limit=500):
 def aggregate_by_industry(database_path, geo=None, employment_size=None, dynamics=None, limit=500):
     return _aggregate_rows(database_path, "o.naics, o.geo, o.employment_size, o.business_dynamics, o.reference_period",
                            {"geo": geo, "employment_size": employment_size, "business_dynamics": dynamics}, limit)
+
+
+
+OSB_INSOLVENCY_DISCLAIMER = (
+    "OSB BIA insolvency proceedings are not equivalent to all business failures or permanent closure; "
+    "they are not Statistics Canada business-closure observations or narrative company outcomes."
+)
+
+
+def insolvency_filter_values(database_path):
+    with _connect(database_path) as connection:
+        return {
+            "geo": [row[0] for row in connection.execute("SELECT DISTINCT geo FROM osb_insolvency_observations ORDER BY geo")],
+            "period": [row[0] for row in connection.execute("SELECT DISTINCT reference_period FROM osb_insolvency_observations ORDER BY reference_period")],
+            "type": [row[0] for row in connection.execute("SELECT DISTINCT insolvency_type FROM osb_insolvency_observations ORDER BY insolvency_type")],
+        }
+
+
+def aggregate_insolvencies(database_path, geo=None, period=None, insolvency_type=None, limit=500):
+    filters = {"geo": geo, "reference_period": period, "insolvency_type": insolvency_type}
+    clauses, parameters = [], []
+    for field, value in filters.items():
+        if value is not None:
+            clauses.append(field + " = ?")
+            parameters.append(value)
+    where = " WHERE " + " AND ".join(clauses) if clauses else ""
+    with _connect(database_path) as connection:
+        rows = _rows(connection, """
+            SELECT reference_period, geo, geo_level, debtor_type, business_form,
+                   insolvency_type, naics, measure, uom, value,
+                   COALESCE(NULLIF(status, ''), 'none') AS status_flag, source_url, retrieval_date
+            FROM osb_insolvency_observations%s
+            ORDER BY reference_period, geo, debtor_type, business_form, naics, insolvency_type, osb_insolvency_observation_id
+            LIMIT ?
+        """ % where, tuple(parameters + [limit]))
+        metadata = _rows(connection, """
+            SELECT table_number, title, publisher, source_url, retrieval_date, definition_notes, extraction_criteria
+            FROM datasets WHERE dataset_id = 'osb-bia-insolvency-statistics-2026-03'
+        """)
+        return {"filters": {key: value for key, value in {"geo": geo, "period": period, "type": insolvency_type}.items() if value is not None},
+                "rows": rows, "metadata": {"datasets": metadata,
+                "status_flags": [row[0] for row in connection.execute("SELECT DISTINCT COALESCE(NULLIF(status, ''), 'none') FROM osb_insolvency_observations%s ORDER BY 1" % where, tuple(parameters))],
+                "interpretation_disclaimer": OSB_INSOLVENCY_DISCLAIMER}}
 
 
 def to_json(value):

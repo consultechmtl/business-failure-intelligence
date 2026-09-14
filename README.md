@@ -52,6 +52,14 @@ provided at `/mnt/c/Users/Executor/Downloads/33100722-eng.zip` and
 **not** an assertion of permanent enterprise death, insolvency, bankruptcy, or
 a cause of failure.
 
+## OSB aggregate insolvency layer
+
+Official OSB workbook source: `https://ised-isde.canada.ca/site/office-superintendent-bankruptcy/sites/default/files/documents/insolvency_statistiques_insolvabilite_march_2026.xlsx`.
+
+The March 2026 workbook was downloaded and ZIP-verified on 2026-09-14; SHA-256 is recorded in `docs/data-sources.md`. Its raw `.xlsx` is gitignored in `data/raw/`. The additive `osb_insolvency_observations` table is not company-linked and preserves period, province/Canada, consumer/business debtor type, business form, bankruptcy/proposal proceeding type, NAICS sector when supplied, unit, published status, and provenance.
+
+OSB BIA insolvency proceedings are **not equivalent to all business failures or permanent closure**. Do not combine or sum them with Statistics Canada closure observations or narrative cases; they are distinct outcome layers and do not establish causes.
+
 ## Validate, load, normalize, analyze, and test
 
 Run from the repository root:
@@ -65,6 +73,9 @@ python3 scripts/analyze_aggregate.py
 # A complete ZIP is required; raw archives remain gitignored.
 python3 scripts/normalize_statcan.py data/raw/33100722-eng.zip \
   --table 33100722 --retrieval-date YYYY-MM-DD
+python3 scripts/normalize_osb_insolvencies.py \
+  data/raw/insolvency_statistiques_insolvabilite_march_2026.xlsx \
+  --retrieval-date YYYY-MM-DD
 
 python3 -m unittest discover -s tests -v
 ```
@@ -86,6 +97,7 @@ curl http://127.0.0.1:8000/aggregate/summary
 curl 'http://127.0.0.1:8000/aggregate/trends?geo=Quebec&dynamics=Closures'
 curl 'http://127.0.0.1:8000/aggregate/by-size?geo=Quebec'
 curl 'http://127.0.0.1:8000/aggregate/by-industry?geo=Quebec&employment_size=1%20to%204%20employees'
+curl 'http://127.0.0.1:8000/aggregate/insolvencies?geo=Quebec&period=2026-03&type=Bankruptcy'
 ```
 
 All aggregate responses include source dataset/table provenance, source URL and
