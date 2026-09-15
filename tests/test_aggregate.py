@@ -1,5 +1,6 @@
 import csv
 import sqlite3
+from contextlib import closing
 import subprocess
 import sys
 import tempfile
@@ -85,7 +86,7 @@ class AggregateLayerTests(unittest.TestCase):
                 cwd=REPO_ROOT, text=True, capture_output=True,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
-            with sqlite3.connect(database) as connection:
+            with closing(sqlite3.connect(database)) as connection:
                 self.assertGreater(connection.execute("SELECT COUNT(*) FROM datasets").fetchone()[0], 0)
                 self.assertEqual(connection.execute("SELECT COUNT(*) FROM aggregate_observations").fetchone()[0], 50862)
                 self.assertEqual(connection.execute("PRAGMA foreign_key_check").fetchall(), [])
@@ -138,7 +139,7 @@ class OsbInsolvencyTests(unittest.TestCase):
             database = root / "insolvencies.sqlite"
             result = subprocess.run([sys.executable, "scripts/load_sqlite.py", "--db", str(database), "--data-dir", str(data_dir)], cwd=REPO_ROOT, text=True, capture_output=True)
             self.assertEqual(result.returncode, 0, result.stderr)
-            with sqlite3.connect(database) as connection:
+            with closing(sqlite3.connect(database)) as connection:
                 self.assertGreater(connection.execute("SELECT COUNT(*) FROM osb_insolvency_observations").fetchone()[0], 0)
                 columns = {row[1] for row in connection.execute("PRAGMA table_info(osb_insolvency_observations)")}
                 self.assertNotIn("company_id", columns)

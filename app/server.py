@@ -145,6 +145,8 @@ def create_server(host, port, database_path):
                 return self._json(200, {"status": "ok"})
             if path == "/summary":
                 return self._json(200, intelligence.corpus_summary(database_path))
+            if path == "/coverage":
+                return self._json(200, intelligence.coverage_dashboard(database_path))
             if path == "/companies":
                 return self._json(200, intelligence.companies(database_path))
             if path == "/causes":

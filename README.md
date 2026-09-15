@@ -94,6 +94,7 @@ python3 app/server.py --db data/business_failure.sqlite --port 8000
 
 ```sh
 curl http://127.0.0.1:8000/aggregate/summary
+curl http://127.0.0.1:8000/coverage
 curl 'http://127.0.0.1:8000/aggregate/trends?geo=Quebec&dynamics=Closures'
 curl 'http://127.0.0.1:8000/aggregate/by-size?geo=Quebec'
 curl 'http://127.0.0.1:8000/aggregate/by-industry?geo=Quebec&employment_size=1%20to%204%20employees'
@@ -101,6 +102,10 @@ curl 'http://127.0.0.1:8000/aggregate/insolvencies?geo=Quebec&period=2026-03&typ
 curl 'http://127.0.0.1:8000/aggregate/comparison?geo=Quebec&period_start=2026-01&period_end=2026-03&limit=50'
 curl 'http://127.0.0.1:8000/insights/profile?geo=Quebec&industry_code=electric-vehicles&business_model_code=vehicle-manufacturing&employment_size=1%20to%204%20employees&limit=20'
 ```
+
+## Coverage dashboard
+
+`GET /coverage` is a deterministic inventory endpoint. It returns reviewed individual-case row counts, separately labeled Statistics Canada aggregate-row and OSB insolvency-proceeding-row counts, and dataset metadata/provenance. It explicitly states that aggregate rows are not individual companies and must not be added to narrative case counts.
 
 ## Founder-profile insights
 

@@ -14,16 +14,18 @@ def analyze():
     with tempfile.TemporaryDirectory() as directory:
         database = Path(directory) / "aggregate.sqlite"
         load(database, ROOT / "data" / "curated", ROOT / "schema" / "cause_taxonomy.csv", ROOT / "schema" / "schema.sql")
-        with sqlite3.connect(database) as connection:
-            return connection.execute(
-                """
-                SELECT reference_period, geo, employment_size, business_dynamics, value, uom
-                FROM aggregate_observations
-                WHERE geo IN ('Canada', 'Quebec')
-                  AND business_dynamics IN ('Openings', 'Closures')
-                ORDER BY reference_period, employment_size, business_dynamics, geo
-                """
-            ).fetchall()
+        connection = sqlite3.connect(database)
+        rows = connection.execute(
+            """
+            SELECT reference_period, geo, employment_size, business_dynamics, value, uom
+            FROM aggregate_observations
+            WHERE geo IN ('Canada', 'Quebec')
+              AND business_dynamics IN ('Openings', 'Closures')
+            ORDER BY reference_period, employment_size, business_dynamics, geo
+            """
+        ).fetchall()
+        connection.close()
+        return rows
 
 
 def main():

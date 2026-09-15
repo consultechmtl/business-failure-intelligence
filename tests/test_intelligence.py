@@ -24,18 +24,18 @@ class IntelligenceTests(unittest.TestCase):
 
     def test_summary_reports_reviewed_corpus_counts(self):
         summary = intelligence.corpus_summary(self.db_path)
-        self.assertEqual(summary["companies"], 21)
-        self.assertEqual(summary["outcomes"], 21)
-        self.assertEqual(summary["sources"], 22)
-        self.assertEqual(summary["cause_assertions"], 37)
+        self.assertEqual(summary["companies"], 29)
+        self.assertEqual(summary["outcomes"], 29)
+        self.assertEqual(summary["sources"], 30)
+        self.assertEqual(summary["cause_assertions"], 43)
         self.assertEqual(summary["warning_signs"], 10)
-        self.assertEqual(summary["lessons"], 21)
+        self.assertEqual(summary["lessons"], 29)
         self.assertEqual(summary["aliases"], 32)
 
     def test_cause_counts_by_confidence_are_complete_and_ordered(self):
         self.assertEqual(
             intelligence.cause_counts_by_confidence(self.db_path),
-            [{"confidence": "high", "count": 27}, {"confidence": "medium", "count": 10}, {"confidence": "low", "count": 0}],
+            [{"confidence": "high", "count": 28}, {"confidence": "medium", "count": 15}, {"confidence": "low", "count": 0}],
         )
 
     def test_company_detail_preserves_evidence_linkages(self):
@@ -58,7 +58,7 @@ class IntelligenceTests(unittest.TestCase):
         self.assertIn("CA-QC", geography_by_code)
         self.assertGreater(geography_by_code["CA-QC"]["cause_assertions"], 0)
         comparison = intelligence.quebec_vs_international(self.db_path)
-        self.assertEqual(comparison["quebec"]["companies"], 7)
+        self.assertEqual(comparison["quebec"]["companies"], 13)
         self.assertEqual(comparison["international"]["companies"], 10)
 
     def test_aggregate_summary_reports_counts_provenance_and_safe_interpretation(self):
@@ -125,7 +125,7 @@ class IntelligenceTests(unittest.TestCase):
     def test_json_serialization_is_deterministic(self):
         payload = intelligence.to_json(intelligence.corpus_summary(self.db_path))
         self.assertEqual(payload, intelligence.to_json(intelligence.corpus_summary(self.db_path)))
-        self.assertEqual(json.loads(payload)["companies"], 21)
+        self.assertEqual(json.loads(payload)["companies"], 29)
 
 
 if __name__ == "__main__":

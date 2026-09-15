@@ -46,7 +46,7 @@ class ServerTests(unittest.TestCase):
         second = self.request("/summary")
         self.assertEqual(first[0], 200)
         self.assertEqual(first[1], second[1])
-        self.assertEqual(json.loads(first[1])["companies"], 21)
+        self.assertEqual(json.loads(first[1])["companies"], 29)
 
     def test_case_endpoint_returns_evidence_and_missing_case_is_404(self):
         status, body = self.request("/companies/wesabe")
@@ -181,6 +181,21 @@ class ServerTests(unittest.TestCase):
             self.assertIsNotNone(json.loads(body))
         status, _ = self.request("/not-a-route")
         self.assertEqual(status, 404)
+
+
+    def test_coverage_dashboard_reports_metadata_and_separate_layers(self):
+        first = self.request("/coverage")
+        second = self.request("/coverage")
+        self.assertEqual(first, second)
+        self.assertEqual(first[0], 200)
+        payload = json.loads(first[1])
+        self.assertEqual(payload["narrative_cases"]["companies"], 29)
+        self.assertEqual(payload["narrative_cases"]["row_counts"]["cause_assertions"], 43)
+        self.assertEqual(payload["aggregate_observations"]["statistics_canada_rows"], 50862)
+        self.assertEqual(payload["aggregate_observations"]["osb_insolvency_proceeding_rows"], 546)
+        self.assertTrue(payload["datasets"])
+        self.assertIn("not individual companies", payload["aggregate_observations"]["scope_note"])
+        self.assertIn("separate layers", payload["interpretation_caveat"])
 
 
 if __name__ == "__main__":

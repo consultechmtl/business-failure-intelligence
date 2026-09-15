@@ -55,6 +55,12 @@ The curated corpus includes outcome-confirmed records for Taiga Motors, Lion Ele
 
 These filings establish proceedings and transactions, not automatically the businesses’ root causes. Consequently, the expansion codes one narrowly supported Taiga terminal funding assertion from contemporaneous reporting; the other five cases have no cause assertions. Their lessons explicitly retain this evidence boundary. This is a coverage increment, not a representative sample of Quebec failures or insolvencies.
 
+### Reviewed Canadian and Quebec SMB increment (September 2026)
+
+Eight additional reviewed cases are recorded: Plastube; Coopérative de solidarité de Bellevue (Marché Richelieu); Métro Média; Ébénisterie St-Urbain Ltée and Woodlore International Inc.; South Shore Furniture; Hôtel Suites Lac-Brome; Brant InStore; and Joriki. The supporting source URLs, verbatim short quotations for each coded cause, and outcome records are in the curated CSVs.
+
+The official OSB CCAA registry verifies Ébénisterie St-Urbain’s initial order and the Alvarez & Marsal monitor page verifies Joriki’s NOI/CCAA process. Those formal-process records are outcome evidence only. Plastube likewise has a reviewed closure/bankruptcy outcome but no coded cause. Causes are coded only where reporting provides an attributable, short quoted statement: terminal financial constraints for Bellevue and Métro Média; company-attributed market conditions for South Shore Furniture; the reported pandemic disruption for Hôtel Suites Lac-Brome; and customer loss for Brant InStore. This remains a selected, non-representative narrative corpus; Brunswick and Olymel are not included.
+
 ## Evidence grades
 
 - **A:** primary founder/company statement, court/regulatory finding, or official record directly supporting the claim

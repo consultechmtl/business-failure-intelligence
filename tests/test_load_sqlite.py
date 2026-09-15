@@ -1,5 +1,6 @@
 import csv
 import sqlite3
+from contextlib import closing
 import subprocess
 import sys
 import tempfile
@@ -23,9 +24,9 @@ class LoadSqliteTests(unittest.TestCase):
             result = self.run_loader(database_path)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("aggregate_observations=50862", result.stdout)
-            self.assertIn("Loaded 51651 rows", result.stdout)
+            self.assertIn("Loaded 51689 rows", result.stdout)
 
-            with sqlite3.connect(database_path) as connection:
+            with closing(sqlite3.connect(database_path)) as connection:
                 self.assertEqual(connection.execute("SELECT COUNT(*) FROM industries").fetchone()[0], 17)
                 self.assertEqual(connection.execute("SELECT COUNT(*) FROM business_models").fetchone()[0], 16)
                 self.assertEqual(connection.execute("SELECT COUNT(*) FROM geographies").fetchone()[0], 19)
@@ -43,14 +44,14 @@ class LoadSqliteTests(unittest.TestCase):
             database_path = Path(directory) / "corpus.sqlite"
             result = self.run_loader(database_path)
             self.assertEqual(result.returncode, 0, result.stderr)
-            with sqlite3.connect(database_path) as connection:
+            with closing(sqlite3.connect(database_path)) as connection:
                 warning_count = connection.execute("SELECT COUNT(*) FROM warning_signs").fetchone()[0]
                 warning_joined_count = connection.execute("SELECT COUNT(*) FROM warning_signs AS warning JOIN companies AS company ON company.company_id = warning.company_id JOIN sources AS source ON source.source_id = warning.source_id").fetchone()[0]
                 self.assertEqual(warning_count, 10)
                 self.assertEqual(warning_joined_count, warning_count)
                 assertion_count = connection.execute("SELECT COUNT(*) FROM cause_assertions").fetchone()[0]
                 joined_count = connection.execute("SELECT COUNT(*) FROM cause_assertions AS assertion JOIN companies AS company ON company.company_id = assertion.company_id JOIN sources AS source ON source.source_id = assertion.source_id").fetchone()[0]
-                self.assertEqual(assertion_count, 37)
+                self.assertEqual(assertion_count, 43)
                 self.assertEqual(joined_count, assertion_count)
                 self.assertEqual(connection.execute("PRAGMA foreign_key_check").fetchall(), [])
 

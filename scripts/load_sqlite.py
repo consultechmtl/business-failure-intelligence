@@ -63,6 +63,7 @@ def load(database_path, data_dir, taxonomy_path, schema_path):
         counts["osb_insolvency_observations"] = insert_rows(
             connection, "osb_insolvency_observations", osb_columns, read_rows(osb_path) if osb_path.exists() else []
         )
+    connection.close()
     return counts
 
 

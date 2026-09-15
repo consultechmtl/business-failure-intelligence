@@ -2,16 +2,21 @@
 
 import json
 import sqlite3
+from contextlib import contextmanager
 from pathlib import Path
 
 
 CONFIDENCES = ("high", "medium", "low")
 
 
+@contextmanager
 def _connect(database_path):
     connection = sqlite3.connect(Path(database_path))
     connection.row_factory = sqlite3.Row
-    return connection
+    try:
+        yield connection
+    finally:
+        connection.close()
 
 
 def _rows(connection, query, parameters=()):
@@ -23,6 +28,45 @@ def corpus_summary(database_path):
     with _connect(database_path) as connection:
         counts = {table: connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] for table in tables}
     return {"companies": counts["companies"], "outcomes": counts["outcomes"], "sources": counts["sources"], "cause_assertions": counts["cause_assertions"], "warning_signs": counts["warning_signs"], "lessons": counts["lessons"], "aliases": counts["entity_aliases"]}
+
+
+def coverage_dashboard(database_path):
+    """Describe coverage without conflating narrative cases and aggregate rows."""
+    narrative_tables = (
+        "companies", "outcomes", "sources", "cause_assertions", "warning_signs",
+        "lessons", "entity_aliases",
+    )
+    with _connect(database_path) as connection:
+        narrative_counts = {
+            table: connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+            for table in narrative_tables
+        }
+        aggregate_rows = connection.execute("SELECT COUNT(*) FROM aggregate_observations").fetchone()[0]
+        osb_rows = connection.execute("SELECT COUNT(*) FROM osb_insolvency_observations").fetchone()[0]
+        datasets = _rows(connection, """
+            SELECT d.dataset_id, d.table_number, d.title, d.publisher, d.source_url,
+                   d.retrieval_date, d.definition_notes, d.extraction_criteria,
+                   (SELECT COUNT(*) FROM aggregate_observations a WHERE a.dataset_id = d.dataset_id) AS statistics_canada_rows,
+                   (SELECT COUNT(*) FROM osb_insolvency_observations o WHERE o.dataset_id = d.dataset_id) AS osb_proceeding_rows
+            FROM datasets AS d
+            ORDER BY d.table_number
+        """)
+    return {
+        "narrative_cases": {
+            "label": "Reviewed individual company cases",
+            "row_counts": narrative_counts,
+            "companies": narrative_counts["companies"],
+            "scope_note": "Curated narrative cases are non-representative individual records; causes require linked evidence.",
+        },
+        "aggregate_observations": {
+            "label": "Official aggregate observations",
+            "statistics_canada_rows": aggregate_rows,
+            "osb_insolvency_proceeding_rows": osb_rows,
+            "scope_note": "Aggregate rows are not individual companies or narrative cases and must not be added to case counts.",
+        },
+        "datasets": datasets,
+        "interpretation_caveat": "Statistics Canada closures, OSB proceedings, and curated company outcomes are separate layers with different definitions and observation units.",
+    }
 
 
 def companies(database_path):

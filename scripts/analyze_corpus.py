@@ -54,6 +54,7 @@ def analyze():
                 WHERE country_code IS NULL OR country_code != 'CA'
                 """,
             )
+        connection.close()
     return confidence_counts, locations, comparisons
 
 
